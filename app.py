@@ -13,6 +13,10 @@ from modules.temperature import (
 from modules.allergens import get_allergen_matrix, get_allergen_summary
 from modules.excel_parser import parse_upload, validate_temperature_upload
 from modules.report_generator import generate_audit_report
+from modules.shelf_life import (
+    get_expiring_soon, get_expired, get_concessions,
+    get_shelf_life_summary, decode_batch_code
+)
 
 # === CONFIG ===
 with open("config.yaml", "r") as f:
@@ -69,10 +73,11 @@ with st.sidebar:
     st.caption("Built by [Pawan Singh Kapkoti](https://pawansingh3889.github.io)")
 
 # === MAIN CONTENT ===
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     ":link: Batch Traceability",
     ":thermometer: Temperature",
     ":warning: Allergens",
+    ":calendar: Shelf Life",
     ":page_facing_up: Audit Report",
 ])
 
@@ -208,8 +213,65 @@ with tab3:
         csv = display.to_csv(index=False)
         st.download_button("Download CSV", csv, "allergen_matrix.csv", "text/csv", use_container_width=True)
 
-# === TAB 4: AUDIT REPORT ===
+# === TAB 4: SHELF LIFE & CONCESSIONS ===
 with tab4:
+    st.header("Shelf Life & Concessions")
+    st.caption("Track use-by dates. Fresh = +19 days (superchill). Defrost = +11 days (chiller). Beyond = concession required.")
+
+    # Summary
+    sl_summary = get_shelf_life_summary()
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Batches (30d)", sl_summary["total_batches"])
+    col2.metric("Within Spec", sl_summary["within_spec"])
+    col3.metric("Concessions", sl_summary["concessions"],
+                delta="OK" if sl_summary["concessions"] == 0 else f"{sl_summary['concessions']} needed",
+                delta_color="normal" if sl_summary["concessions"] == 0 else "inverse")
+    col4.metric("Compliance", f"{sl_summary['compliance_pct']}%")
+
+    st.divider()
+
+    # Batch code decoder
+    st.subheader("Batch Code Decoder")
+    decode_input = st.text_input("Enter batch code to decode", placeholder="e.g. D6067K or F6043A")
+    if decode_input:
+        decoded = decode_batch_code(decode_input)
+        if decoded:
+            dcol1, dcol2, dcol3, dcol4 = st.columns(4)
+            dcol1.metric("Type", decoded["product_type"])
+            dcol2.metric("Pack Date", decoded["pack_date"])
+            dcol3.metric("Use By", decoded["use_by_date"])
+            dcol4.metric("Storage", decoded["storage"])
+            st.info(f"Shelf life: {decoded['shelf_life_days']} days. Sub-batch: {decoded['sub_batch'] or 'N/A'}")
+        else:
+            st.error("Invalid batch code format. Expected D/F + YDDD + letter (e.g. D6067K)")
+
+    st.divider()
+
+    # Expiring soon
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Expiring Within 3 Days")
+        expiring = get_expiring_soon(3)
+        if expiring.empty:
+            st.success("No batches expiring in the next 3 days.")
+        else:
+            st.warning(f"{len(expiring)} batch(es) expiring soon!")
+            st.dataframe(expiring, use_container_width=True,
+                        column_config={
+                            "days_remaining": st.column_config.NumberColumn("Days Left", format="%d"),
+                        })
+
+    with col2:
+        st.subheader("Concessions (Last 30 Days)")
+        concessions = get_concessions(30)
+        if concessions.empty:
+            st.success("No concessions required in the last 30 days.")
+        else:
+            st.dataframe(concessions, use_container_width=True)
+
+# === TAB 5: AUDIT REPORT ===
+with tab5:
     st.header("Audit Report")
     st.caption(f"Generate a {STANDARD} compliance report for the last 30 days.")
 

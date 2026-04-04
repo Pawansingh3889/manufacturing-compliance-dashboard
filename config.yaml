@@ -1,35 +1,69 @@
 # Manufacturing Compliance Dashboard Configuration
-# Edit these values to match your facility
+# Based on real UK fish processing factory operations
 
 facility:
-  name: "Demo Fish Processing Plant"
-  site_code: "DEMO-001"
+  name: "Fish Processing Facility"
+  site_code: "FPF-001"
   standard: "BRC Food Safety"
+  primary_customer: "Lidl"
 
-# Temperature thresholds by location (degrees Celsius)
+# Batch code format
+# D = Defrost, F = Fresh
+# Numbers = Julian date (YDDD format: Y=last digit of year, DDD=day of year)
+# Letter suffix = sub-batch (A, B, C, D, E, F)
+# Example: D6067K = Defrost, 2026 day 067 (March 8), batch K
+# Example: F6043A = Fresh, 2026 day 043 (February 12), batch A
+batch_codes:
+  prefixes:
+    D: "Defrost"
+    F: "Fresh"
+  date_format: "YDDD"  # Y = last digit of year, DDD = day of year
+
+# Shelf life rules
+shelf_life:
+  fresh:
+    days: 19
+    storage: "superchill"
+    concession_required: false
+  defrost:
+    days: 11
+    storage: "chiller"
+    concession_required_after: 11  # Days beyond which concession is needed
+
+# Temperature thresholds by zone
 temperature:
   locations:
-    Cold Room 1:
-      min: -2.0
+    Superchill:
+      min: -1.0
+      max: 1.0
+      category: superchill
+      description: "Fresh fish storage (-1 to +1C)"
+    Chiller 1:
+      min: 0.0
       max: 5.0
       category: chilled
-    Cold Room 2:
-      min: -2.0
+      description: "Defrost and general chilled storage"
+    Chiller 2:
+      min: 0.0
       max: 5.0
       category: chilled
+      description: "Secondary chilled storage"
     Freezer 1:
-      min: -25.0
-      max: -15.0
+      min: -22.0
+      max: -18.0
       category: frozen
+      description: "Frozen storage"
     Production Floor:
       min: 8.0
       max: 15.0
       category: ambient
+      description: "Processing area"
     Dispatch Bay:
       min: 0.0
-      max: 8.0
+      max: 5.0
       category: chilled
-  excursion_alert_minutes: 30  # Alert if out of range for this long
+      description: "Loading and dispatch area"
+  excursion_alert_minutes: 30
 
 # Allergens tracked (EU 14 major allergens)
 allergens:
@@ -48,19 +82,19 @@ allergens:
   - Nuts
   - Peanuts
 
-# Compliance scoring weights
+# Compliance scoring
 scoring:
   temperature_weight: 0.4
   traceability_weight: 0.4
-  allergen_weight: 0.2
-  passing_threshold: 85  # % needed to pass
+  shelf_life_weight: 0.2
+  passing_threshold: 85
 
 # Database
 database:
   url: "sqlite:///data/compliance.db"
 
-# Demo data settings
+# Demo data
 demo:
   days: 60
-  products: 10
+  products: 12
   readings_per_day: 8
