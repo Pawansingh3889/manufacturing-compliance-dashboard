@@ -1,0 +1,66 @@
+# Manufacturing Compliance Dashboard Configuration
+# Edit these values to match your facility
+
+facility:
+  name: "Demo Fish Processing Plant"
+  site_code: "DEMO-001"
+  standard: "BRC Food Safety"
+
+# Temperature thresholds by location (degrees Celsius)
+temperature:
+  locations:
+    Cold Room 1:
+      min: -2.0
+      max: 5.0
+      category: chilled
+    Cold Room 2:
+      min: -2.0
+      max: 5.0
+      category: chilled
+    Freezer 1:
+      min: -25.0
+      max: -15.0
+      category: frozen
+    Production Floor:
+      min: 8.0
+      max: 15.0
+      category: ambient
+    Dispatch Bay:
+      min: 0.0
+      max: 8.0
+      category: chilled
+  excursion_alert_minutes: 30  # Alert if out of range for this long
+
+# Allergens tracked (EU 14 major allergens)
+allergens:
+  - Fish
+  - Crustaceans
+  - Molluscs
+  - Milk
+  - Eggs
+  - Gluten
+  - Soya
+  - Sulphites
+  - Mustard
+  - Celery
+  - Sesame
+  - Lupin
+  - Nuts
+  - Peanuts
+
+# Compliance scoring weights
+scoring:
+  temperature_weight: 0.4
+  traceability_weight: 0.4
+  allergen_weight: 0.2
+  passing_threshold: 85  # % needed to pass
+
+# Database
+database:
+  url: "sqlite:///data/compliance.db"
+
+# Demo data settings
+demo:
+  days: 60
+  products: 10
+  readings_per_day: 8
