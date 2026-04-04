@@ -111,7 +111,7 @@ with tab1:
                     else:
                         st.info("No customer orders linked to this batch yet.")
                 else:
-                    st.error(f"Batch {batch_code} not found. Try RM-YYMMDD-NNNN or PR-YYMMDD-NNNN format.")
+                    st.error(f"Batch {batch_code} not found. Try formats like F6093E, D6067K, or click a batch code from the table.")
 
     with col2:
         st.subheader("Recent Batches")
