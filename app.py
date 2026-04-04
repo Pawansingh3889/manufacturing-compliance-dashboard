@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import yaml
 import json
+from datetime import datetime
 
 from modules.traceability import trace_batch, get_traceability_score, get_recent_batches
 from modules.temperature import (
@@ -12,7 +13,7 @@ from modules.temperature import (
 )
 from modules.allergens import get_allergen_matrix, get_allergen_summary
 from modules.excel_parser import parse_upload, validate_temperature_upload
-from modules.report_generator import generate_audit_report
+from modules.report_generator import generate_audit_report, generate_full_audit_report
 from modules.shelf_life import (
     get_expiring_soon, get_expired, get_concessions,
     get_shelf_life_summary, decode_batch_code
@@ -125,6 +126,18 @@ with tab1:
                 },
             )
 
+            # PDF Export
+            with st.expander("Export Audit Report (PDF)"):
+                if st.button("Generate Traceability PDF", key="trace_pdf"):
+                    pdf_bytes = generate_audit_report(recent, "Batch Traceability Report", FACILITY)
+                    st.download_button(
+                        "Download PDF",
+                        data=pdf_bytes,
+                        file_name="traceability_audit_report.pdf",
+                        mime="application/pdf",
+                        key="trace_dl",
+                    )
+
 # === TAB 2: TEMPERATURE MONITORING ===
 with tab2:
     st.header("Temperature Monitoring")
@@ -178,6 +191,19 @@ with tab2:
                          annotation_text=f"Min: {limits['min']}C")
             fig.update_layout(height=400, margin=dict(l=0, r=0, t=40, b=0))
             st.plotly_chart(fig, width='stretch')
+
+    # PDF Export for temperature
+    with st.expander("Export Temperature Report (PDF)"):
+        if st.button("Generate Temperature PDF", key="temp_pdf"):
+            temp_excursions_30d = get_excursions(30)
+            pdf_bytes = generate_audit_report(temp_excursions_30d, "Temperature Excursion Report (30 Days)", FACILITY)
+            st.download_button(
+                "Download PDF",
+                data=pdf_bytes,
+                file_name="temperature_excursion_report.pdf",
+                mime="application/pdf",
+                key="temp_dl",
+            )
 
 # === TAB 3: ALLERGEN MATRIX ===
 with tab3:
@@ -275,49 +301,56 @@ with tab5:
     st.header("Audit Report")
     st.caption(f"Generate a {STANDARD} compliance report for the last 30 days.")
 
-    if st.button("Generate Report", type="primary", width='stretch'):
+    if st.button("Generate Full Audit Report", type="primary"):
         with st.spinner("Generating audit report..."):
-            excursions = get_excursions(30)
-            matrix = get_allergen_matrix()
+            excursions_30d = get_excursions(30)
+            allergen_matrix = get_allergen_matrix()
+            sl_summary = get_shelf_life_summary()
+            concessions_30d = get_concessions(30)
+            recent = get_recent_batches(50)
 
-            report = generate_audit_report(
-                temp_score=temp_score,
-                trace_score=trace_score,
-                excursions=excursions,
-                allergen_matrix=matrix,
-                production_summary=None,
-            )
+            overall = round((temp_score + trace_score) / 2, 1)
+            status = "PASS" if overall >= 85 else "FAIL"
 
             # Display scores
-            status_color = "green" if report["compliance_scores"]["status"] == "PASS" else "red"
-            st.markdown(f"### Status: :{status_color}[{report['compliance_scores']['status']}]")
+            status_color = "green" if status == "PASS" else "red"
+            st.markdown(f"### Status: :{status_color}[{status}]")
 
             col1, col2, col3 = st.columns(3)
-            col1.metric("Temperature", report["compliance_scores"]["temperature_control"])
-            col2.metric("Traceability", report["compliance_scores"]["batch_traceability"])
-            col3.metric("Overall", report["compliance_scores"]["overall"])
+            col1.metric("Temperature", f"{temp_score}%")
+            col2.metric("Traceability", f"{trace_score}%")
+            col3.metric("Overall", f"{overall}%")
 
             st.divider()
 
-            # Details
             st.subheader("Excursions in Period")
-            if not excursions.empty:
-                st.dataframe(excursions, width='stretch')
+            if not excursions_30d.empty:
+                st.dataframe(excursions_30d, width='stretch')
             else:
                 st.success("No excursions in the last 30 days.")
 
             st.subheader("Allergen Matrix")
-            st.dataframe(matrix, width='stretch')
+            st.dataframe(allergen_matrix, width='stretch')
 
             st.divider()
 
-            # Export options
+            # PDF Export
             st.subheader("Export")
-            st.download_button(
-                "Download Report (JSON)",
-                json.dumps(report, indent=2, default=str),
-                "audit_report.json",
-                "application/json",
-                width='stretch',
+
+            pdf_bytes = generate_full_audit_report(
+                factory_name=FACILITY,
+                temp_score=temp_score,
+                trace_score=trace_score,
+                excursions_df=excursions_30d,
+                allergen_df=allergen_matrix,
+                shelf_life_summary=sl_summary,
+                concessions_df=concessions_30d,
+                recent_batches_df=recent,
             )
-            st.info("PDF and Excel export available in the [premium version](https://pawankapko.gumroad.com/).")
+
+            st.download_button(
+                "Download Full Audit Report (PDF)",
+                data=pdf_bytes,
+                file_name=f"brc_audit_report_{datetime.now().strftime('%Y%m%d')}.pdf",
+                mime="application/pdf",
+            )
