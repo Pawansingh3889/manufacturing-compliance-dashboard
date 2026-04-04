@@ -1,4 +1,5 @@
 """Manufacturing Compliance Dashboard — BRC/HACCP compliance for food manufacturing."""
+import os
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
@@ -6,6 +7,12 @@ import pandas as pd
 import yaml
 import json
 from datetime import datetime
+
+# Auto-seed demo database if it doesn't exist
+DB_PATH = os.path.join(os.path.dirname(__file__), "data", "compliance.db")
+if not os.path.exists(DB_PATH):
+    from data.seed_demo import seed
+    seed()
 
 from modules.traceability import trace_batch, get_traceability_score, get_recent_batches
 from modules.temperature import (
