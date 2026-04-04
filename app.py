@@ -65,17 +65,25 @@ with st.sidebar:
 
     st.divider()
 
-    # Data upload
-    st.markdown("### :open_file_folder: Upload Data")
-    uploaded = st.file_uploader("Upload Excel/CSV", type=["csv", "xlsx", "xls"],
-                                 help="Upload temperature logs, production data, or raw materials")
+    # ERP Data Import
+    st.markdown("### :open_file_folder: Import ERP Data")
+    data_type = st.selectbox("Data type", ["production", "raw_materials", "temperature"],
+                              format_func=lambda x: x.replace("_", " ").title())
+    uploaded = st.file_uploader("Drop your ERP export here", type=["csv", "xlsx", "xls"],
+                                 help="Supports SI Integreater, Aptean, and generic BRC exports. Columns are auto-mapped.")
     if uploaded:
-        df, error = parse_upload(uploaded)
-        if error:
-            st.error(error)
+        from modules.erp_parser import parse_erp_file
+        mapped_df, report = parse_erp_file(uploaded, data_type)
+        if "error" in report:
+            st.error(report["error"])
         else:
-            st.success(f"Loaded {len(df)} rows from {uploaded.name}")
-            st.dataframe(df.head(10), width='stretch')
+            st.success(f"Mapped {report['mapped_count']}/{report['total_columns']} columns from {report['source']}")
+            if report["unmapped"]:
+                st.warning(f"Unmapped columns: {', '.join(report['unmapped'])}")
+            with st.expander("Column mapping"):
+                for orig, mapped in report["mapped"].items():
+                    st.text(f"{orig} -> {mapped}")
+            st.dataframe(mapped_df.head(10), width='stretch')
 
     st.divider()
     st.caption("Built by [Pawan Singh Kapkoti](https://pawansingh3889.github.io)")
