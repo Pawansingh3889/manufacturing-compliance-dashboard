@@ -1,16 +1,17 @@
 """ERP Data Parser — imports data from any food manufacturing ERP system.
 
 Supports:
-- SI Integreater (Aptean) exports
+- SI Integreater (Aptean) exports via SSRS (SQL Server Reporting Services)
 - Generic BRC-compliant CSV/Excel exports
 - Custom column mapping via config
 
-The parser auto-detects column names and maps them to the dashboard schema.
-If columns don't match exactly, it uses fuzzy matching to find the closest match.
+The parser auto-detects SSRS formatting (header rows, merged cells, footers)
+and strips it before mapping columns to the dashboard schema.
 """
 import pandas as pd
 import re
 from datetime import datetime, timedelta
+from modules.ssrs_parser import parse_ssrs_file, detect_ssrs_format
 
 
 # Standard column name mappings — maps common ERP export headers to our schema
@@ -180,6 +181,9 @@ def auto_map_columns(df, data_type):
 def parse_erp_file(uploaded_file, data_type):
     """Parse an uploaded ERP export file and map to dashboard schema.
 
+    Auto-detects SSRS formatting (SI Integreater exports) and strips
+    header rows, merged cells, and footer totals before mapping columns.
+
     Args:
         uploaded_file: Streamlit UploadedFile object
         data_type: 'raw_materials', 'production', or 'temperature'
@@ -189,7 +193,24 @@ def parse_erp_file(uploaded_file, data_type):
     """
     filename = uploaded_file.name.lower()
 
-    # Read file
+    # Step 1: Try SSRS parser first (handles SI Integreater exports)
+    try:
+        uploaded_file.seek(0)
+        ssrs_df, ssrs_meta = parse_ssrs_file(uploaded_file)
+        if ssrs_meta.get("is_ssrs") and not ssrs_df.empty:
+            # SSRS format detected — use cleaned data
+            mapped_df, report = auto_map_columns(ssrs_df, data_type)
+            report["format"] = "SSRS (SI Integreater)"
+            report["ssrs_metadata"] = ssrs_meta
+            report["rows"] = len(mapped_df)
+            report["source"] = filename
+            return _post_process(mapped_df, report)
+    except Exception:
+        pass  # Fall through to standard parser
+
+    # Step 2: Standard parser (non-SSRS files)
+    uploaded_file.seek(0)
+
     try:
         if filename.endswith(".csv"):
             # Try different encodings and delimiters
@@ -222,7 +243,15 @@ def parse_erp_file(uploaded_file, data_type):
 
     # Auto-map columns
     mapped_df, report = auto_map_columns(df, data_type)
+    report["rows"] = len(mapped_df)
+    report["source"] = filename
+    report["format"] = "Standard CSV/Excel"
 
+    return _post_process(mapped_df, report)
+
+
+def _post_process(mapped_df, report):
+    """Clean up dates, numbers, and formats after column mapping."""
     # Format dates
     date_cols = [c for c in mapped_df.columns if "date" in c.lower() or c in ("recorded_at", "pack_date")]
     for col in date_cols:
@@ -238,9 +267,6 @@ def parse_erp_file(uploaded_file, data_type):
     for col in ["quantity_kg", "raw_input_kg", "finished_output_kg", "waste_kg"]:
         if col in mapped_df.columns:
             mapped_df[col] = pd.to_numeric(mapped_df[col], errors="coerce")
-
-    report["rows"] = len(mapped_df)
-    report["source"] = filename
 
     return mapped_df, report
 
