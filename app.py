@@ -90,7 +90,7 @@ with tab1:
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        batch_code = st.text_input("Enter batch code", placeholder="e.g. RM-260301-0001 or PR-260301-0001")
+        batch_code = st.text_input("Enter batch code", placeholder="e.g. F6093E or D6067K")
 
         if st.button("Trace Batch", type="primary", width='stretch'):
             if batch_code:
