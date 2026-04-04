@@ -67,7 +67,7 @@ with st.sidebar:
             st.error(error)
         else:
             st.success(f"Loaded {len(df)} rows from {uploaded.name}")
-            st.dataframe(df.head(10), use_container_width=True)
+            st.dataframe(df.head(10), width='stretch')
 
     st.divider()
     st.caption("Built by [Pawan Singh Kapkoti](https://pawansingh3889.github.io)")
@@ -91,7 +91,7 @@ with tab1:
     with col1:
         batch_code = st.text_input("Enter batch code", placeholder="e.g. RM-260301-0001 or PR-260301-0001")
 
-        if st.button("Trace Batch", type="primary", use_container_width=True):
+        if st.button("Trace Batch", type="primary", width='stretch'):
             if batch_code:
                 result = trace_batch(batch_code)
                 if result["found"]:
@@ -99,15 +99,15 @@ with tab1:
 
                     if "raw_materials" in result and not result["raw_materials"].empty:
                         st.subheader("Raw Materials")
-                        st.dataframe(result["raw_materials"], use_container_width=True)
+                        st.dataframe(result["raw_materials"], width='stretch')
 
                     if "production" in result and not result["production"].empty:
                         st.subheader("Production")
-                        st.dataframe(result["production"], use_container_width=True)
+                        st.dataframe(result["production"], width='stretch')
 
                     if "orders" in result and not result["orders"].empty:
                         st.subheader("Customer Orders")
-                        st.dataframe(result["orders"], use_container_width=True)
+                        st.dataframe(result["orders"], width='stretch')
                     else:
                         st.info("No customer orders linked to this batch yet.")
                 else:
@@ -119,7 +119,7 @@ with tab1:
         if not recent.empty:
             st.dataframe(
                 recent,
-                use_container_width=True,
+                width='stretch',
                 column_config={
                     "yield_pct": st.column_config.ProgressColumn("Yield %", min_value=0, max_value=100),
                 },
@@ -160,7 +160,7 @@ with tab2:
             st.success("No temperature excursions in the last 7 days.")
         else:
             st.warning(f"{len(excursions)} excursion(s) detected!")
-            st.dataframe(excursions, use_container_width=True)
+            st.dataframe(excursions, width='stretch')
 
     with col2:
         st.subheader("Temperature Trend")
@@ -177,7 +177,7 @@ with tab2:
             fig.add_hline(y=limits["min"], line_dash="dash", line_color="blue",
                          annotation_text=f"Min: {limits['min']}C")
             fig.update_layout(height=400, margin=dict(l=0, r=0, t=40, b=0))
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
 # === TAB 3: ALLERGEN MATRIX ===
 with tab3:
@@ -207,11 +207,11 @@ with tab3:
 
         allergen_cols = [c for c in display.columns if c not in ["Product", "Species", "Category", "Total Allergens"]]
         styled = display.style.map(highlight_allergens, subset=allergen_cols)
-        st.dataframe(styled, use_container_width=True, height=400)
+        st.dataframe(styled, width='stretch', height=400)
 
         # Export
         csv = display.to_csv(index=False)
-        st.download_button("Download CSV", csv, "allergen_matrix.csv", "text/csv", use_container_width=True)
+        st.download_button("Download CSV", csv, "allergen_matrix.csv", "text/csv", width='stretch')
 
 # === TAB 4: SHELF LIFE & CONCESSIONS ===
 with tab4:
@@ -257,7 +257,7 @@ with tab4:
             st.success("No batches expiring in the next 3 days.")
         else:
             st.warning(f"{len(expiring)} batch(es) expiring soon!")
-            st.dataframe(expiring, use_container_width=True,
+            st.dataframe(expiring, width='stretch',
                         column_config={
                             "days_remaining": st.column_config.NumberColumn("Days Left", format="%d"),
                         })
@@ -268,14 +268,14 @@ with tab4:
         if concessions.empty:
             st.success("No concessions required in the last 30 days.")
         else:
-            st.dataframe(concessions, use_container_width=True)
+            st.dataframe(concessions, width='stretch')
 
 # === TAB 5: AUDIT REPORT ===
 with tab5:
     st.header("Audit Report")
     st.caption(f"Generate a {STANDARD} compliance report for the last 30 days.")
 
-    if st.button("Generate Report", type="primary", use_container_width=True):
+    if st.button("Generate Report", type="primary", width='stretch'):
         with st.spinner("Generating audit report..."):
             excursions = get_excursions(30)
             matrix = get_allergen_matrix()
@@ -302,12 +302,12 @@ with tab5:
             # Details
             st.subheader("Excursions in Period")
             if not excursions.empty:
-                st.dataframe(excursions, use_container_width=True)
+                st.dataframe(excursions, width='stretch')
             else:
                 st.success("No excursions in the last 30 days.")
 
             st.subheader("Allergen Matrix")
-            st.dataframe(matrix, use_container_width=True)
+            st.dataframe(matrix, width='stretch')
 
             st.divider()
 
@@ -318,6 +318,6 @@ with tab5:
                 json.dumps(report, indent=2, default=str),
                 "audit_report.json",
                 "application/json",
-                use_container_width=True,
+                width='stretch',
             )
             st.info("PDF and Excel export available in the [premium version](https://pawankapko.gumroad.com/).")
