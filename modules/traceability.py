@@ -6,17 +6,18 @@ from modules.database import query, scalar
 def trace_batch(batch_code):
     """Trace a batch through the full supply chain.
 
-    Supports batch code formats:
+    Supports:
     - Factory format: D6067K (Defrost), F6043A (Fresh)
-    - Legacy format: RM-YYMMDD-NNNN (raw material), PR-YYMMDD-NNNN (production)
+    - Any case: f6093e works the same as F6093E
     """
     batch_code = batch_code.strip().upper()
     result = {"batch_code": batch_code, "found": False}
 
-    # Try production batch first (F/D prefix or PR- prefix)
+    # Search production table first (most common lookup)
     prod = query(
         "SELECT p.*, pr.name as product_name, pr.product_type, pr.shelf_life_days "
-        "FROM production p JOIN products pr ON p.product_id = pr.id "
+        "FROM production p "
+        "JOIN products pr ON p.product_id = pr.id "
         "WHERE UPPER(p.batch_code) = :b",
         {"b": batch_code}
     )
@@ -27,33 +28,42 @@ def trace_batch(batch_code):
 
         # Trace back to raw materials
         rm_batch = prod.iloc[0].get("raw_material_batch")
-        if rm_batch:
-            rm = query("SELECT * FROM raw_materials WHERE batch_code = :b", {"b": rm_batch})
+        if rm_batch and str(rm_batch).strip():
+            rm = query(
+                "SELECT * FROM raw_materials WHERE UPPER(batch_code) = :b",
+                {"b": str(rm_batch).strip().upper()}
+            )
             result["raw_materials"] = rm
         else:
             result["raw_materials"] = pd.DataFrame()
 
         # Trace forward to orders
         orders = query(
-            "SELECT o.*, pr.name as product_name FROM orders o "
+            "SELECT o.*, pr.name as product_name "
+            "FROM orders o "
             "JOIN products pr ON o.product_id = pr.id "
-            "WHERE o.production_batch = :b",
+            "WHERE UPPER(o.production_batch) = :b",
             {"b": batch_code}
         )
         result["orders"] = orders
         return result
 
-    # Try raw material batch
-    rm = query("SELECT * FROM raw_materials WHERE UPPER(batch_code) = :b", {"b": batch_code})
+    # Search raw materials table
+    rm = query(
+        "SELECT * FROM raw_materials WHERE UPPER(batch_code) = :b",
+        {"b": batch_code}
+    )
+
     if not rm.empty:
         result["found"] = True
         result["raw_materials"] = rm
 
         # Find production runs using this raw material
         prod = query(
-            "SELECT p.*, pr.name as product_name FROM production p "
+            "SELECT p.*, pr.name as product_name "
+            "FROM production p "
             "JOIN products pr ON p.product_id = pr.id "
-            "WHERE p.raw_material_batch = :b",
+            "WHERE UPPER(p.raw_material_batch) = :b",
             {"b": batch_code}
         )
         result["production"] = prod
@@ -62,7 +72,8 @@ def trace_batch(batch_code):
             prod_batches = prod["batch_code"].tolist()
             placeholders = ",".join([f"'{b}'" for b in prod_batches])
             orders = query(
-                f"SELECT o.*, pr.name as product_name FROM orders o "
+                f"SELECT o.*, pr.name as product_name "
+                f"FROM orders o "
                 f"JOIN products pr ON o.product_id = pr.id "
                 f"WHERE o.production_batch IN ({placeholders})"
             )
@@ -77,7 +88,7 @@ def trace_batch(batch_code):
 def get_traceability_score():
     """Calculate % of production runs with complete traceability chain."""
     total = scalar("SELECT COUNT(*) FROM production")
-    linked = scalar("SELECT COUNT(*) FROM production WHERE raw_material_batch IS NOT NULL")
+    linked = scalar("SELECT COUNT(*) FROM production WHERE raw_material_batch IS NOT NULL AND raw_material_batch != ''")
     if total and total > 0:
         return round((linked / total) * 100, 1)
     return 0.0

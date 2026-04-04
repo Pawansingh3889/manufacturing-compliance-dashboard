@@ -5,24 +5,25 @@ Defrost products: +11 days from pack date (chiller storage)
 Beyond shelf life: concession required from Quality Manager
 """
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from modules.database import query, scalar
 
 
 def get_expiring_soon(days_ahead=3):
     """Find production batches expiring within N days."""
-    return query(f"""
-        SELECT p.batch_code, p.pack_date, p.use_by_date,
-               pr.name as product_name, pr.product_type, pr.shelf_life_days,
-               p.finished_output_kg,
-               CAST(julianday(p.use_by_date) - julianday('now') AS INTEGER) as days_remaining,
-               p.concession_required
-        FROM production p
-        JOIN products pr ON p.product_id = pr.id
-        WHERE p.use_by_date >= date('now')
-        AND p.use_by_date <= date('now', '+{days_ahead} days')
-        ORDER BY p.use_by_date ASC
-    """)
+    return query(
+        "SELECT p.batch_code, p.pack_date, p.use_by_date, "
+        "pr.name as product_name, pr.product_type, pr.shelf_life_days, "
+        "p.finished_output_kg, "
+        "CAST(julianday(p.use_by_date) - julianday('now') AS INTEGER) as days_remaining, "
+        "p.concession_required "
+        "FROM production p "
+        "JOIN products pr ON p.product_id = pr.id "
+        "WHERE p.use_by_date >= date('now') "
+        "AND p.use_by_date <= date('now', :ahead) "
+        "ORDER BY p.use_by_date ASC",
+        {"ahead": f"+{days_ahead} days"}
+    )
 
 
 def get_expired():
@@ -42,37 +43,36 @@ def get_expired():
 
 def get_concessions(days=30):
     """Get all concession records for the period."""
-    return query(f"""
-        SELECT c.batch_code, c.reason, c.pack_date,
-               c.original_use_by, c.extended_use_by,
-               c.approved_by, c.approved_date, c.status,
-               pr.name as product_name
-        FROM concessions c
-        JOIN products pr ON c.product_id = pr.id
-        WHERE c.approved_date >= date('now', '-{days} days')
-        ORDER BY c.approved_date DESC
-    """)
+    return query(
+        "SELECT c.batch_code, c.reason, c.pack_date, "
+        "c.original_use_by, c.extended_use_by, "
+        "c.approved_by, c.approved_date, c.status, "
+        "pr.name as product_name "
+        "FROM concessions c "
+        "JOIN products pr ON c.product_id = pr.id "
+        "WHERE c.approved_date >= date('now', :days_ago) "
+        "ORDER BY c.approved_date DESC",
+        {"days_ago": f"-{days} days"}
+    )
 
 
 def get_shelf_life_summary():
     """Get summary of shelf life compliance."""
-    total_batches = scalar("""
-        SELECT COUNT(*) FROM production
-        WHERE date >= date('now', '-30 days')
-    """) or 0
+    total_batches = scalar(
+        "SELECT COUNT(*) FROM production WHERE date >= date('now', '-30 days')"
+    ) or 0
 
-    concession_batches = scalar("""
-        SELECT COUNT(*) FROM production
-        WHERE date >= date('now', '-30 days')
-        AND concession_required = 1
-    """) or 0
+    concession_batches = scalar(
+        "SELECT COUNT(*) FROM production "
+        "WHERE date >= date('now', '-30 days') AND concession_required = 1"
+    ) or 0
 
     within_spec = total_batches - concession_batches
 
     return {
-        "total_batches": total_batches,
-        "within_spec": within_spec,
-        "concessions": concession_batches,
+        "total_batches": int(total_batches),
+        "within_spec": int(within_spec),
+        "concessions": int(concession_batches),
         "compliance_pct": round((within_spec / total_batches) * 100, 1) if total_batches > 0 else 100.0,
     }
 
@@ -103,7 +103,6 @@ def decode_batch_code(batch_code):
         julian = int(batch_code[2:5])
         sub_batch = batch_code[5:] if len(batch_code) > 5 else ""
 
-        # Convert Julian day to date
         pack_date = datetime(year, 1, 1) + timedelta(days=julian - 1)
         shelf_days = 11 if prefix == "D" else 19
         use_by = pack_date + timedelta(days=shelf_days)
@@ -121,7 +120,3 @@ def decode_batch_code(batch_code):
         }
     except (ValueError, OverflowError):
         return None
-
-
-# Need this import at module level
-from datetime import timedelta

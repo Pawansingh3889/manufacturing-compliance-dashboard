@@ -1,13 +1,18 @@
 """Temperature monitoring and excursion detection."""
+import os
 import pandas as pd
 import yaml
 from modules.database import query, scalar
 
 
+def _get_config():
+    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.yaml")
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
+
+
 def _get_thresholds():
-    with open("config.yaml", "r") as f:
-        config = yaml.safe_load(f)
-    return config["temperature"]["locations"]
+    return _get_config()["temperature"]["locations"]
 
 
 def get_latest_readings():
@@ -30,20 +35,22 @@ def get_excursions(days=7):
     all_excursions = []
 
     for location, limits in thresholds.items():
-        excursions = query(f"""
-            SELECT location, temperature, recorded_at, recorded_by
-            FROM temp_logs
-            WHERE location = '{location}'
-            AND (temperature < {limits['min']} OR temperature > {limits['max']})
-            AND recorded_at >= date('now', '-{days} days')
-            ORDER BY recorded_at DESC
-        """)
+        excursions = query(
+            "SELECT location, temperature, recorded_at, recorded_by "
+            "FROM temp_logs "
+            "WHERE location = :loc "
+            "AND (temperature < :min_t OR temperature > :max_t) "
+            "AND recorded_at >= date('now', :days_ago)",
+            {"loc": location, "min_t": limits["min"], "max_t": limits["max"],
+             "days_ago": f"-{days} days"}
+        )
         if not excursions.empty:
             excursions["threshold_min"] = limits["min"]
             excursions["threshold_max"] = limits["max"]
+            mid = (limits["min"] + limits["max"]) / 2
+            span = limits["max"] - limits["min"]
             excursions["severity"] = excursions["temperature"].apply(
-                lambda t: "CRITICAL" if abs(t - (limits["min"] + limits["max"]) / 2) > (limits["max"] - limits["min"])
-                else "WARNING"
+                lambda t: "CRITICAL" if abs(t - mid) > span else "WARNING"
             )
             all_excursions.append(excursions)
 
@@ -55,13 +62,12 @@ def get_excursions(days=7):
 
 def get_temperature_trend(location, days=30):
     """Get temperature readings over time for a specific location."""
-    return query(f"""
-        SELECT temperature, recorded_at
-        FROM temp_logs
-        WHERE location = '{location}'
-        AND recorded_at >= date('now', '-{days} days')
-        ORDER BY recorded_at
-    """)
+    return query(
+        "SELECT temperature, recorded_at FROM temp_logs "
+        "WHERE location = :loc AND recorded_at >= date('now', :days_ago) "
+        "ORDER BY recorded_at",
+        {"loc": location, "days_ago": f"-{days} days"}
+    )
 
 
 def get_compliance_score(days=30):
@@ -71,19 +77,20 @@ def get_compliance_score(days=30):
     compliant = 0
 
     for location, limits in thresholds.items():
-        total_loc = scalar(f"""
-            SELECT COUNT(*) FROM temp_logs
-            WHERE location = '{location}'
-            AND recorded_at >= date('now', '-{days} days')
-        """) or 0
+        total_loc = scalar(
+            "SELECT COUNT(*) FROM temp_logs "
+            "WHERE location = :loc AND recorded_at >= date('now', :days_ago)",
+            {"loc": location, "days_ago": f"-{days} days"}
+        ) or 0
 
-        compliant_loc = scalar(f"""
-            SELECT COUNT(*) FROM temp_logs
-            WHERE location = '{location}'
-            AND temperature >= {limits['min']}
-            AND temperature <= {limits['max']}
-            AND recorded_at >= date('now', '-{days} days')
-        """) or 0
+        compliant_loc = scalar(
+            "SELECT COUNT(*) FROM temp_logs "
+            "WHERE location = :loc "
+            "AND temperature >= :min_t AND temperature <= :max_t "
+            "AND recorded_at >= date('now', :days_ago)",
+            {"loc": location, "min_t": limits["min"], "max_t": limits["max"],
+             "days_ago": f"-{days} days"}
+        ) or 0
 
         total += total_loc
         compliant += compliant_loc
