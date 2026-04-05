@@ -11,9 +11,9 @@ from datetime import datetime
 # Always reseed demo database on startup — ensures latest schema
 # Skip if connected to SQL Server via COMPLIANCE_DB env var
 if not os.getenv("COMPLIANCE_DB"):
-    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "factory_compliance.db")
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
+    from modules.database import DB_PATH as _DB_PATH
+    if _DB_PATH and os.path.exists(_DB_PATH):
+        os.remove(_DB_PATH)
     from data.seed_demo import seed
     seed()
 

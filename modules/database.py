@@ -10,12 +10,24 @@ Base = declarative_base()
 # Database URL — supports SQLite (demo) or SQL Server (production)
 # Set COMPLIANCE_DB env var to connect to SQL Server/SSRS:
 #   COMPLIANCE_DB=mssql+pyodbc://user:pass@server/database?driver=ODBC+Driver+17+for+SQL+Server
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 _DB_ENV = os.getenv("COMPLIANCE_DB")
 if _DB_ENV:
     DB_PATH = None
     DB_URL = _DB_ENV
 else:
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "factory_compliance.db")
+    _LOCAL_DATA_DIR = os.path.join(_PROJECT_ROOT, "data")
+    # Streamlit Cloud mounts the repo read-only. Detect by checking if the
+    # data directory is writable; if not, fall back to a temp directory that
+    # survives for the lifetime of the container.
+    if os.access(_LOCAL_DATA_DIR, os.W_OK):
+        DB_PATH = os.path.join(_LOCAL_DATA_DIR, "factory_compliance.db")
+    else:
+        import tempfile
+        _TMP_DATA = os.path.join(tempfile.gettempdir(), "compliance_dashboard")
+        os.makedirs(_TMP_DATA, exist_ok=True)
+        DB_PATH = os.path.join(_TMP_DATA, "factory_compliance.db")
     DB_URL = f"sqlite:///{DB_PATH}"
 
 
@@ -96,7 +108,7 @@ class Order(Base):
 
 
 def load_config():
-    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.yaml")
+    config_path = os.path.join(_PROJECT_ROOT, "config.yaml")
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
 
