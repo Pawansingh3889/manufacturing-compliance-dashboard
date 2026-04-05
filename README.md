@@ -16,7 +16,7 @@ Built by someone who works on the factory floor.
 ---
 
 
-## Batch Analytics (PySpark)
+## Batch Analytics (PySpark / Databricks)
 
 The spark/ module provides batch-level analytics using PySpark, designed for processing large volumes of compliance data:
 
@@ -30,6 +30,9 @@ The spark/ module provides batch-level analytics using PySpark, designed for pro
 ```bash
 pip install pyspark>=3.5
 python spark/batch_analytics.py
+
+# Or run the Databricks notebook
+# Import notebooks/compliance_analytics.py into your Databricks workspace
 ```
 
 
