@@ -1,8 +1,72 @@
-"""Database connection layer. Supports SQLite (demo) and PostgreSQL (production)."""
+"""Database engine with proper SQLAlchemy ORM tables."""
 import os
 import pandas as pd
 import yaml
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Column, Integer, String, Float, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+Base = declarative_base()
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "factory_compliance.db")
+DB_URL = f"sqlite:///{DB_PATH}"
+
+
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True)
+    code = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
+    species = Column(String)
+    category = Column(String)
+    product_type = Column(String)  # fresh or defrost
+    shelf_life_days = Column(Integer)
+    storage_zone = Column(String)
+    allergens = Column(String)
+    customer = Column(String, default="Retail")
+
+
+class Batch(Base):
+    __tablename__ = "batches"
+    id = Column(Integer, primary_key=True)
+    batch_code = Column(String, nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"))
+    intake_date = Column(String)
+    production_date = Column(String)
+    pack_date = Column(String)
+    use_by_date = Column(String)
+    raw_material_batch = Column(String)
+    supplier = Column(String)
+    raw_input_kg = Column(Float)
+    finished_output_kg = Column(Float)
+    waste_kg = Column(Float)
+    yield_pct = Column(Float)
+    line_number = Column(Integer)
+    shift = Column(String)
+    operator = Column(String)
+    status = Column(String, default="Complete")
+    concession_required = Column(Boolean, default=False)
+    concession_reason = Column(String)
+
+
+class TemperatureLog(Base):
+    __tablename__ = "temperature_logs"
+    id = Column(Integer, primary_key=True)
+    location = Column(String, nullable=False)
+    temperature = Column(Float, nullable=False)
+    timestamp = Column(String, nullable=False)
+    recorded_by = Column(String)
+    is_excursion = Column(Boolean, default=False)
+
+
+class Order(Base):
+    __tablename__ = "orders"
+    id = Column(Integer, primary_key=True)
+    customer = Column(String)
+    product_id = Column(Integer, ForeignKey("products.id"))
+    production_batch = Column(String)
+    quantity_kg = Column(Float)
+    order_date = Column(String)
+    delivery_date = Column(String)
+    status = Column(String)
 
 
 def load_config():
@@ -12,21 +76,10 @@ def load_config():
 
 
 def get_engine():
-    """Create a fresh engine each time to avoid stale connection issues."""
-    config = load_config()
-    db_url = config["database"]["url"]
-
-    # Handle relative SQLite paths
-    if "sqlite:///" in db_url and not db_url.startswith("sqlite:////"):
-        db_path = db_url.replace("sqlite:///", "")
-        abs_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), db_path)
-        db_url = f"sqlite:///{abs_path}"
-
-    return create_engine(db_url, echo=False)
+    return create_engine(DB_URL, echo=False)
 
 
 def query(sql, params=None):
-    """Run a SQL query and return a DataFrame."""
     engine = get_engine()
     try:
         if params:
@@ -37,8 +90,21 @@ def query(sql, params=None):
 
 
 def scalar(sql, params=None):
-    """Run a query and return a single value."""
     df = query(sql, params)
     if df.empty:
         return None
     return df.iloc[0, 0]
+
+
+def init_db():
+    """Create all tables."""
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+    engine.dispose()
+
+
+def drop_all():
+    """Drop all tables."""
+    engine = get_engine()
+    Base.metadata.drop_all(engine)
+    engine.dispose()
