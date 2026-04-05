@@ -12,8 +12,10 @@ from datetime import datetime
 # Skip if connected to SQL Server via COMPLIANCE_DB env var
 if not os.getenv("COMPLIANCE_DB"):
     from modules.database import DB_PATH as _DB_PATH
-    if _DB_PATH and os.path.exists(_DB_PATH):
-        os.remove(_DB_PATH)
+    if _DB_PATH:
+        if os.path.exists(_DB_PATH):
+            os.remove(_DB_PATH)
+        os.makedirs(os.path.dirname(_DB_PATH), exist_ok=True)
     from data.seed_demo import seed
     seed()
 
@@ -291,18 +293,27 @@ with tab0:
         styled = style_map
         st.dataframe(styled, use_container_width=True, height=500)
 
-        # Certification check (if data available)
-        if "certification" in fefo.columns:
-            st.divider()
-            st.markdown("**Certification Allocation Check**")
-            rspca_stock = fefo[fefo["certification"] == "RSPCA"]["Weight (kg)"].sum() if "Weight (kg)" in fefo.columns else 0
-            msc_stock = fefo[fefo["certification"] == "MSC"]["Weight (kg)"].sum() if "Weight (kg)" in fefo.columns else 0
-            std_stock = fefo[fefo["certification"] == "Standard"]["Weight (kg)"].sum() if "Weight (kg)" in fefo.columns else 0
-
-            ccol1, ccol2, ccol3 = st.columns(3)
-            ccol1.metric("RSPCA Stock", f"{rspca_stock:,.0f} kg")
-            ccol2.metric("MSC Stock", f"{msc_stock:,.0f} kg")
-            ccol3.metric("Standard Stock", f"{std_stock:,.0f} kg")
+        # RSPCA raw material mismatch check
+        st.divider()
+        st.markdown("**Raw Material Certification Check**")
+        st.caption("Flags when RSPCA-certified raw material is used on GG production runs (margin loss)")
+        try:
+            mismatches = query("""
+                SELECT b.batch_code, p.name as product, p.certification as product_cert,
+                       b.rm_certification as raw_material_cert, b.stock_kg as "Weight (kg)",
+                       b.production_date
+                FROM batches b JOIN products p ON b.product_id = p.id
+                WHERE b.rm_certification = 'RSPCA' AND p.certification = 'GG'
+                AND b.status = 'In Stock' AND b.stock_kg > 0
+                ORDER BY b.production_date DESC
+            """)
+            if not mismatches.empty:
+                st.warning(f"{len(mismatches)} batch(es) using RSPCA raw material on GG runs — premium fish at standard price")
+                st.dataframe(mismatches, use_container_width=True)
+            else:
+                st.success("No certification mismatches — all raw material matches product specification")
+        except Exception:
+            st.info("Raw material certification tracking not available in current data")
     else:
         st.success("No stock currently in inventory.")
 
