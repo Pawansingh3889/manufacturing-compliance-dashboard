@@ -91,7 +91,7 @@ scoring:
 
 # Database
 database:
-  url: "sqlite:///data/compliance.db"
+  url: "sqlite:///data/factory_compliance.db"
 
 # Demo data
 demo:
