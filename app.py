@@ -510,14 +510,22 @@ with tab4:
     with col2:
         st.markdown("**Concessions — Plan vs Tag (30 days)**")
         st.caption("Plan use-by is ahead of tag use-by = concession required")
-        concessions = query("""
-            SELECT b.batch_code, p.name, p.shelf_life_type,
-                   b.tag_use_by as "Tag Use-By", b.plan_use_by as "Plan Use-By",
-                   b.concession_reason, b.pack_date
-            FROM batches b JOIN products p ON b.product_id = p.id
-            WHERE b.concession_required = 1 AND b.production_date >= date('now', '-30 days')
-            ORDER BY b.production_date DESC
-        """)
+        try:
+            concessions = query("""
+                SELECT b.batch_code, p.name,
+                       b.tag_use_by as "Tag Use-By", b.plan_use_by as "Plan Use-By",
+                       b.concession_reason, b.pack_date
+                FROM batches b JOIN products p ON b.product_id = p.id
+                WHERE b.concession_required = 1 AND b.production_date >= date('now', '-30 days')
+                ORDER BY b.production_date DESC
+            """)
+        except Exception:
+            concessions = query("""
+                SELECT b.batch_code, p.name, b.concession_reason, b.pack_date, b.use_by_date
+                FROM batches b JOIN products p ON b.product_id = p.id
+                WHERE b.concession_required = 1 AND b.production_date >= date('now', '-30 days')
+                ORDER BY b.production_date DESC
+            """)
         if concessions.empty:
             st.success("No concessions needed")
         else:
