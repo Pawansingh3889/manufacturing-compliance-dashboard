@@ -17,7 +17,7 @@ if not _needs_seed:
         _conn = sqlite3.connect(DB_PATH)
         _cols = [r[1] for r in _conn.execute("PRAGMA table_info(batches)").fetchall()]
         _conn.close()
-        if "life_days" not in _cols:
+        if "harvest_date" not in _cols:
             os.remove(DB_PATH)
             _needs_seed = True
     except Exception:
