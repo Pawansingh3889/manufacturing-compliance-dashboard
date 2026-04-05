@@ -115,18 +115,20 @@ def load_config():
         return yaml.safe_load(f)
 
 
+_engine = None
+
 def get_engine():
-    return create_engine(DB_URL, echo=False)
+    global _engine
+    if _engine is None:
+        _engine = create_engine(DB_URL, echo=False)
+    return _engine
 
 
 def query(sql, params=None):
     engine = get_engine()
-    try:
-        if params:
-            return pd.read_sql(text(sql), engine, params=params)
-        return pd.read_sql(sql, engine)
-    finally:
-        engine.dispose()
+    if params:
+        return pd.read_sql(text(sql), engine, params=params)
+    return pd.read_sql(sql, engine)
 
 
 def scalar(sql, params=None):

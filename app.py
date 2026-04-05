@@ -8,16 +8,13 @@ import yaml
 import json
 from datetime import datetime
 
-# Always reseed demo database on startup — ensures latest schema
-# Skip if connected to SQL Server via COMPLIANCE_DB env var
+# Seed demo database only if it doesn't exist
 if not os.getenv("COMPLIANCE_DB"):
     from modules.database import DB_PATH as _DB_PATH
-    if _DB_PATH:
-        if os.path.exists(_DB_PATH):
-            os.remove(_DB_PATH)
+    if _DB_PATH and not os.path.exists(_DB_PATH):
         os.makedirs(os.path.dirname(_DB_PATH), exist_ok=True)
-    from data.seed_demo import seed
-    seed()
+        from data.seed_demo import seed
+        seed()
 
 from modules.database import query, scalar, load_config, DB_PATH
 
