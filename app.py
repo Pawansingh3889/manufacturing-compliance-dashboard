@@ -147,8 +147,12 @@ with tab0:
     fefo = query("""
         SELECT b.batch_code, b.run_number,
                p.name as product, p.species, p.certification, p.shelf_life_type,
-               b.harvest_date as "Harvest", b.defrost_date as "Defrost",
-               b.pack_date as "Packed", b.use_by_date as "Use By",
+               CASE
+                   WHEN p.product_type = 'defrost' AND b.defrost_date IS NOT NULL THEN b.defrost_date
+                   WHEN b.harvest_date IS NOT NULL THEN b.harvest_date
+                   ELSE b.intake_date_raw
+               END as "Harvest/Intake/Defrost",
+               b.use_by_date as "Use By",
                b.age_days as "Age (Days)", b.life_days as "Life (Days)",
                b.stock_location as "Location",
                b.stock_kg as "Weight (kg)", b.stock_units as "Units",
@@ -214,7 +218,8 @@ with tab0:
             display = display[display["certification"] == cert_filter]
 
         # Pallet tag view — matches the physical tag on each pallet
-        show_cols = ["batch_code", "product", "Harvest", "Use By",
+        # Tag shows: harvest date (fresh), defrost date (defrost), or intake date
+        show_cols = ["batch_code", "product", "Harvest/Intake/Defrost", "Use By",
                      "Life (Days)", "Location", "Weight (kg)", "Units",
                      "shelf_life_type", "urgency", "action"]
 
