@@ -94,26 +94,41 @@ def seed():
             output_kg = round(raw_kg - waste_kg, 1)
             yield_pct = round((output_kg / raw_kg) * 100, 1)
 
-            # Tag use-by = pack date + shelf life days
-            tag_use_by_dt = date + timedelta(days=prod.shelf_life_days)
+            # Pallet tag dates (generated before use-by calc)
+            harvest_date = (date - timedelta(days=random.randint(1, 5))).strftime("%Y-%m-%d")
+            defrost_dt = (date - timedelta(days=random.randint(0, 2))).strftime("%Y-%m-%d") if prod.product_type == "defrost" else None
+            intake_raw = (date - timedelta(days=random.randint(0, 1))).strftime("%Y-%m-%d")
+
+            # === TWO USE-BY DATES ===
+            # 1. TAG use-by = harvest/defrost/intake date + 19 (fresh) or +11 (defrost)
+            #    This is the raw material life — how long the fish itself lasts
+            harvest_dt = datetime.strptime(harvest_date, "%Y-%m-%d")
+            if prod.product_type == "fresh":
+                tag_use_by_dt = harvest_dt + timedelta(days=19)
+            else:  # defrost
+                defrost_or_intake = datetime.strptime(defrost_dt or intake_raw, "%Y-%m-%d")
+                tag_use_by_dt = defrost_or_intake + timedelta(days=11)
             tag_use_by = tag_use_by_dt.strftime("%Y-%m-%d")
 
-            # Plan use-by = what Lidl's plan says (sometimes ahead of tag)
-            # Concession required if plan_use_by > tag_use_by
+            # 2. LABEL use-by = pack date (today) + 9/10/11/12 days
+            #    This is the retail shelf life printed on the consumer label
+            #    +9 normal, +10 rubber clock (before 2pm), +11 superchill, +12 freeze-down
+            label_use_by_dt = date + timedelta(days=prod.shelf_life_days)
+            label_use_by = label_use_by_dt.strftime("%Y-%m-%d")
+
+            # Effective use-by = earlier of tag and label (product must respect both)
+            use_by = min(tag_use_by, label_use_by)
+
+            # 3. PLAN use-by = what Lidl's plan wants for retail delivery
+            #    Concession required if plan_use_by > tag_use_by
             plan_offset = 0
             concession = False
             conc_reason = None
             if random.random() < 0.08:
                 plan_offset = random.randint(1, 3)
                 concession = True
-                conc_reason = f"Plan use-by +{plan_offset}d ahead of tag use-by"
-            plan_use_by = (tag_use_by_dt + timedelta(days=plan_offset)).strftime("%Y-%m-%d")
-            use_by = tag_use_by  # Effective use-by is always the tag
-
-            # Pallet tag dates
-            harvest_date = (date - timedelta(days=random.randint(1, 5))).strftime("%Y-%m-%d")
-            defrost_dt = (date - timedelta(days=random.randint(0, 2))).strftime("%Y-%m-%d") if prod.product_type == "defrost" else None
-            intake_raw = (date - timedelta(days=random.randint(0, 1))).strftime("%Y-%m-%d")
+                conc_reason = f"Plan use-by +{plan_offset}d ahead of tag ({tag_use_by})"
+            plan_use_by = (label_use_by_dt + timedelta(days=plan_offset)).strftime("%Y-%m-%d")
 
             # RSPCA raw material sometimes used for GG runs (10% chance)
             # This is the margin loss scenario — premium fish at standard price
@@ -157,7 +172,7 @@ def seed():
                 batch_no=batch_no_long, run_number=run_number,
                 product_id=prod.id,
                 intake_date=date_str, production_date=date_str,
-                pack_date=date_str, tag_use_by=tag_use_by, plan_use_by=plan_use_by, use_by_date=use_by,
+                pack_date=date_str, tag_use_by=tag_use_by, label_use_by=label_use_by, plan_use_by=plan_use_by, use_by_date=use_by,
                 age_days=age_days, life_days=life_days,
                 raw_material_batch=f"{prefix}{jd}{sub_batches[random.randint(0, 4)]}",
                 trace_id=trace_id,
