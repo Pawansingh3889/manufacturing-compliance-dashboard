@@ -8,9 +8,21 @@ import yaml
 import json
 from datetime import datetime
 
-# Auto-seed if database doesn't exist
+# Auto-seed database — checks schema version
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "factory_compliance.db")
-if not os.path.exists(DB_PATH):
+_needs_seed = not os.path.exists(DB_PATH)
+if not _needs_seed:
+    try:
+        import sqlite3
+        _conn = sqlite3.connect(DB_PATH)
+        _cols = [r[1] for r in _conn.execute("PRAGMA table_info(batches)").fetchall()]
+        _conn.close()
+        if "life_days" not in _cols:
+            os.remove(DB_PATH)
+            _needs_seed = True
+    except Exception:
+        _needs_seed = True
+if _needs_seed:
     from data.seed_demo import seed
     seed()
 
