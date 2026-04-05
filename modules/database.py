@@ -18,8 +18,10 @@ class Product(Base):
     species = Column(String)
     category = Column(String)
     product_type = Column(String)  # fresh or defrost
+    shelf_life_type = Column(String)  # superchilled (+11/+12d) or standard (+7d)
     shelf_life_days = Column(Integer)
     storage_zone = Column(String)
+    certification = Column(String)  # RSPCA, MSC, Standard
     allergens = Column(String)
     customer = Column(String, default="Retail")
 
@@ -42,9 +44,13 @@ class Batch(Base):
     line_number = Column(Integer)
     shift = Column(String)
     operator = Column(String)
-    status = Column(String, default="Complete")
+    stock_location = Column(String)  # Coldstore, Blast Freezer, Despatch Bay
+    stock_kg = Column(Float, default=0)  # Current stock level
+    status = Column(String, default="Complete")  # Complete, In Stock, Despatched
     concession_required = Column(Boolean, default=False)
     concession_reason = Column(String)
+    concession_approved_by = Column(String)
+    concession_approved_date = Column(String)
 
 
 class TemperatureLog(Base):

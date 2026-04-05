@@ -27,16 +27,16 @@ def seed():
 
     # === PRODUCTS ===
     products = [
-        Product(id=1, code="SAL-F", name="Salmon Portions (Fresh)", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_days=19, storage_zone="Superchill", allergens="Fish", customer="Lidl"),
-        Product(id=2, code="SAL-S", name="Smoked Salmon Sliced", species="Salmon", category="Smoked", product_type="fresh", shelf_life_days=19, storage_zone="Superchill", allergens="Fish", customer="Lidl"),
-        Product(id=3, code="COD-D", name="Cod Loin (Defrost)", species="Cod", category="White Fish", product_type="defrost", shelf_life_days=11, storage_zone="Chiller", allergens="Fish", customer="Lidl"),
-        Product(id=4, code="HAD-D", name="Haddock Fillet (Defrost)", species="Haddock", category="White Fish", product_type="defrost", shelf_life_days=11, storage_zone="Chiller", allergens="Fish", customer="Lidl"),
-        Product(id=5, code="PRW-D", name="King Prawn (Defrost)", species="Prawn", category="Shellfish", product_type="defrost", shelf_life_days=11, storage_zone="Chiller", allergens="Fish,Crustaceans", customer="Lidl"),
-        Product(id=6, code="SBS-F", name="Sea Bass Whole (Fresh)", species="Sea Bass", category="Fresh Fish", product_type="fresh", shelf_life_days=19, storage_zone="Superchill", allergens="Fish", customer="Lidl"),
-        Product(id=7, code="FCK-D", name="Breaded Fish Cake", species="Mixed", category="Processed", product_type="defrost", shelf_life_days=11, storage_zone="Chiller", allergens="Fish,Gluten,Eggs,Milk", customer="Lidl"),
-        Product(id=8, code="BCD-D", name="Breaded Cod Fillet", species="Cod", category="Processed", product_type="defrost", shelf_life_days=11, storage_zone="Chiller", allergens="Fish,Gluten,Eggs", customer="Lidl"),
-        Product(id=9, code="SEC-F", name="Salmon En Croute", species="Salmon", category="Ready Meal", product_type="defrost", shelf_life_days=11, storage_zone="Chiller", allergens="Fish,Gluten,Milk,Eggs", customer="Lidl"),
-        Product(id=10, code="MAC-F", name="Mackerel Fillet (Fresh)", species="Mackerel", category="Fresh Fish", product_type="fresh", shelf_life_days=19, storage_zone="Superchill", allergens="Fish", customer="Lidl"),
+        Product(id=1, code="SAL-F", name="Salmon Portions (Fresh)", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="RSPCA", allergens="Fish", customer="Lidl"),
+        Product(id=2, code="SAL-S", name="Smoked Salmon Sliced", species="Salmon", category="Smoked", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="RSPCA", allergens="Fish", customer="Lidl"),
+        Product(id=3, code="COD-D", name="Cod Loin (Defrost)", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Chiller", certification="MSC", allergens="Fish", customer="Lidl"),
+        Product(id=4, code="HAD-D", name="Haddock Fillet (Defrost)", species="Haddock", category="White Fish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="Standard", allergens="Fish", customer="Lidl"),
+        Product(id=5, code="PRW-D", name="King Prawn (Defrost)", species="Prawn", category="Shellfish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="Standard", allergens="Fish,Crustaceans", customer="Lidl"),
+        Product(id=6, code="SBS-F", name="Sea Bass Whole (Fresh)", species="Sea Bass", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Standard", allergens="Fish", customer="Lidl"),
+        Product(id=7, code="FCK-D", name="Breaded Fish Cake", species="Mixed", category="Processed", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="Standard", allergens="Fish,Gluten,Eggs,Milk", customer="Lidl"),
+        Product(id=8, code="BCD-D", name="Breaded Cod Fillet", species="Cod", category="Processed", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish,Gluten,Eggs", customer="Lidl"),
+        Product(id=9, code="SEC-F", name="Salmon En Croute", species="Salmon", category="Ready Meal", product_type="defrost", shelf_life_type="superchilled", shelf_life_days=12, storage_zone="Chiller", certification="RSPCA", allergens="Fish,Gluten,Milk,Eggs", customer="Lidl"),
+        Product(id=10, code="MAC-F", name="Mackerel Fillet (Fresh)", species="Mackerel", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Standard", allergens="Fish", customer="Lidl"),
     ]
     session.add_all(products)
     session.flush()
@@ -80,6 +80,21 @@ def seed():
                 concession = True
                 conc_reason = f"Extended +{extra}d: late dispatch"
 
+            # Stock location and status based on age
+            days_old = day_offset
+            if days_old <= 2:
+                stock_loc = random.choice(["Coldstore 1", "Coldstore 2", "Blast Freezer"])
+                stock_status = "In Stock"
+                stock_remaining = round(output_kg * random.uniform(0.3, 1.0), 1)
+            elif days_old <= 5:
+                stock_loc = random.choice(["Coldstore 1", "Despatch Bay", "Coldstore 2"])
+                stock_status = random.choice(["In Stock", "In Stock", "Despatched"])
+                stock_remaining = round(output_kg * random.uniform(0, 0.5), 1) if stock_status == "In Stock" else 0
+            else:
+                stock_loc = "Despatched"
+                stock_status = "Despatched"
+                stock_remaining = 0
+
             batch = Batch(
                 id=batch_id, batch_code=batch_code, product_id=prod.id,
                 intake_date=date_str, production_date=date_str,
@@ -91,8 +106,12 @@ def seed():
                 line_number=random.randint(1, 3),
                 shift=random.choice(["Day", "Night"]),
                 operator=random.choice(operators),
-                status="Complete",
+                stock_location=stock_loc,
+                stock_kg=stock_remaining,
+                status=stock_status,
                 concession_required=concession, concession_reason=conc_reason,
+                concession_approved_by=random.choice(["Quality Manager", "Site Manager"]) if concession else None,
+                concession_approved_date=date_str if concession else None,
             )
             session.add(batch)
             day_batches.append(batch_code)

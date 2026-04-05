@@ -117,13 +117,107 @@ with st.sidebar:
     st.caption(f"[pawansingh3889.github.io](https://pawansingh3889.github.io)")
 
 # === MAIN ===
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    ":truck:  FEFO Despatch",
     ":link:  Traceability",
     ":thermometer:  Temperature",
     ":warning:  Allergens",
     ":calendar:  Shelf Life",
     ":page_facing_up:  Audit",
 ])
+
+# === FEFO DESPATCH PRIORITY ===
+with tab0:
+    st.markdown("### Despatch Priority (FEFO)")
+    st.caption("First Expired, First Out. Standard shelf life ships before superchilled when both in stock.")
+
+    # Get all in-stock batches with days to expiry
+    fefo = query("""
+        SELECT b.batch_code, p.name as product, p.species, p.certification,
+               p.shelf_life_type, b.stock_location, b.use_by_date,
+               CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) as days_to_expiry,
+               b.stock_kg,
+               CASE
+                   WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 3 THEN 'RED'
+                   WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 7 THEN 'AMBER'
+                   ELSE 'GREEN'
+               END as urgency
+        FROM batches b
+        JOIN products p ON b.product_id = p.id
+        WHERE b.status = 'In Stock' AND b.stock_kg > 0
+        ORDER BY
+            CASE p.shelf_life_type WHEN 'standard' THEN 0 ELSE 1 END,
+            julianday(b.use_by_date) ASC
+    """)
+
+    if not fefo.empty:
+        # KPI cards
+        red = len(fefo[fefo["urgency"] == "RED"])
+        amber = len(fefo[fefo["urgency"] == "AMBER"])
+        green = len(fefo[fefo["urgency"] == "GREEN"])
+        total_kg = round(fefo["stock_kg"].sum(), 0)
+
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("RED (<3 days)", red, delta="SHIP NOW" if red > 0 else "Clear",
+                    delta_color="inverse" if red > 0 else "normal")
+        col2.metric("AMBER (3-7 days)", amber)
+        col3.metric("GREEN (7+ days)", green)
+        col4.metric("Total Batches", len(fefo))
+        col5.metric("Stock (kg)", f"{total_kg:,.0f}")
+
+        st.divider()
+
+        # Filters
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            species_filter = st.selectbox("Species", ["All"] + sorted(fefo["species"].unique().tolist()), key="fefo_species")
+        with col2:
+            loc_filter = st.selectbox("Location", ["All"] + sorted(fefo["stock_location"].unique().tolist()), key="fefo_loc")
+        with col3:
+            cert_filter = st.selectbox("Certification", ["All"] + sorted(fefo["certification"].unique().tolist()), key="fefo_cert")
+
+        display = fefo.copy()
+        if species_filter != "All":
+            display = display[display["species"] == species_filter]
+        if loc_filter != "All":
+            display = display[display["stock_location"] == loc_filter]
+        if cert_filter != "All":
+            display = display[display["certification"] == cert_filter]
+
+        # Colour-coded table
+        def colour_urgency(val):
+            if val == "RED":
+                return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
+            elif val == "AMBER":
+                return "background-color: #fef3c7; color: #92400e; font-weight: bold"
+            elif val == "GREEN":
+                return "background-color: #dcfce7; color: #166534"
+            return ""
+
+        def colour_shelf_type(val):
+            if val == "standard":
+                return "background-color: #dbeafe; font-weight: bold"
+            return ""
+
+        styled = display.style.map(colour_urgency, subset=["urgency"]).map(colour_shelf_type, subset=["shelf_life_type"])
+        st.dataframe(styled, use_container_width=True, height=500)
+
+        # RSPCA/MSC mismatch check
+        st.divider()
+        st.markdown("**Certification Allocation Check**")
+        rspca_stock = fefo[fefo["certification"] == "RSPCA"]["stock_kg"].sum()
+        msc_stock = fefo[fefo["certification"] == "MSC"]["stock_kg"].sum()
+        std_stock = fefo[fefo["certification"] == "Standard"]["stock_kg"].sum()
+
+        ccol1, ccol2, ccol3 = st.columns(3)
+        ccol1.metric("RSPCA Stock", f"{rspca_stock:,.0f} kg")
+        ccol2.metric("MSC Stock", f"{msc_stock:,.0f} kg")
+        ccol3.metric("Standard Stock", f"{std_stock:,.0f} kg")
+
+        if rspca_stock > 0 and std_stock > 0:
+            st.warning("RSPCA-certified stock in inventory alongside standard stock. Ensure RSPCA product is allocated to RSPCA orders to avoid margin loss.")
+    else:
+        st.success("No stock currently in inventory.")
 
 # === TRACEABILITY ===
 with tab1:
