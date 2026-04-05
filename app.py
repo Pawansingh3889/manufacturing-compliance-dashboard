@@ -8,33 +8,12 @@ import yaml
 import json
 from datetime import datetime
 
-# Auto-seed database — always reseed if schema is wrong
+# Always reseed demo database on startup — ensures latest schema
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "factory_compliance.db")
-SCHEMA_VERSION = "v3"  # Bump this to force reseed on cloud
-
-_needs_seed = not os.path.exists(DB_PATH)
-if not _needs_seed:
-    try:
-        import sqlite3
-        _conn = sqlite3.connect(DB_PATH)
-        _tables = [r[0] for r in _conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
-        if "batches" in _tables:
-            _cols = [r[1] for r in _conn.execute("PRAGMA table_info(batches)").fetchall()]
-            if "harvest_date" not in _cols or "defrost_date" not in _cols or "life_days" not in _cols:
-                _needs_seed = True
-        else:
-            _needs_seed = True
-        _conn.close()
-        if _needs_seed:
-            os.remove(DB_PATH)
-    except Exception:
-        if os.path.exists(DB_PATH):
-            os.remove(DB_PATH)
-        _needs_seed = True
-
-if _needs_seed:
-    from data.seed_demo import seed
-    seed()
+if os.path.exists(DB_PATH):
+    os.remove(DB_PATH)
+from data.seed_demo import seed
+seed()
 
 from modules.database import query, scalar, load_config
 
