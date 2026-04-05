@@ -17,7 +17,7 @@ if not os.getenv("COMPLIANCE_DB"):
     from data.seed_demo import seed
     seed()
 
-from modules.database import query, scalar, load_config
+from modules.database import query, scalar, load_config, DB_PATH
 
 config = load_config()
 FACILITY = config["facility"]["name"]
@@ -136,32 +136,62 @@ with tab0:
 
     # Get all in-stock batches — pallet-level view
     try:
-        fefo = query("""
-            SELECT b.batch_code,
-                   p.name as product, p.species, p.shelf_life_type,
-                   b.intake_date as "Harvest/Intake/Defrost",
-                   b.use_by_date as "Use By",
-                   CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) as "Life (Days)",
-                   b.stock_location as "Location",
-                   b.stock_kg as "Weight (kg)",
-                   CASE
-                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 0 THEN 'EXPIRED'
-                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 2 THEN 'RED'
-                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 5 THEN 'AMBER'
-                       ELSE 'GREEN'
-                   END as urgency,
-                   CASE
-                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 1 THEN 'CONCESSION REQUIRED'
-                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 3 THEN 'SHIP TODAY'
-                       ELSE ''
-                   END as action
-            FROM batches b
-            JOIN products p ON b.product_id = p.id
+        # Build query dynamically based on available columns
+        import sqlite3 as _sq
+        _cn = _sq.connect(DB_PATH if DB_PATH else "data/factory_compliance.db")
+        _batch_cols = [r[1] for r in _cn.execute("PRAGMA table_info(batches)").fetchall()]
+        _prod_cols = [r[1] for r in _cn.execute("PRAGMA table_info(products)").fetchall()]
+        _cn.close()
+
+        # Core columns (always available)
+        _select = ["b.batch_code", "p.name as product", "p.species"]
+
+        # Optional columns — add if they exist
+        if "run_number" in _batch_cols:
+            _select.append("b.run_number")
+        if "shelf_life_type" in _prod_cols:
+            _select.append("p.shelf_life_type")
+        if "certification" in _prod_cols:
+            _select.append("p.certification")
+
+        # Date column — use best available
+        if "harvest_date" in _batch_cols:
+            _select.append('COALESCE(b.harvest_date, b.defrost_date, b.intake_date) as "Harvest/Intake/Defrost"')
+        else:
+            _select.append('b.intake_date as "Harvest/Intake/Defrost"')
+
+        _select.append('b.use_by_date as "Use By"')
+        _select.append('CAST(julianday(b.use_by_date) - julianday(\'now\') AS INTEGER) as "Life (Days)"')
+        _select.append('b.stock_location as "Location"')
+        _select.append('b.stock_kg as "Weight (kg)"')
+
+        if "stock_units" in _batch_cols:
+            _select.append('b.stock_units as "Units"')
+        if "alert_flag" in _batch_cols:
+            _select.append('b.alert_flag as "Alert"')
+
+        # Urgency and action (always calculated)
+        _select.append("""CASE
+            WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 0 THEN 'EXPIRED'
+            WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 2 THEN 'RED'
+            WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 5 THEN 'AMBER'
+            ELSE 'GREEN' END as urgency""")
+        _select.append("""CASE
+            WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 1 THEN 'CONCESSION REQUIRED'
+            WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 3 THEN 'SHIP TODAY'
+            ELSE '' END as action""")
+
+        # Order — prefer shelf_life_type if available
+        _order = "julianday(b.use_by_date) ASC"
+        if "shelf_life_type" in _prod_cols:
+            _order = "CASE p.shelf_life_type WHEN 'standard' THEN 0 ELSE 1 END, " + _order
+
+        _sql = f"""SELECT {', '.join(_select)}
+            FROM batches b JOIN products p ON b.product_id = p.id
             WHERE b.status = 'In Stock' AND b.stock_kg > 0
-            ORDER BY
-                CASE p.shelf_life_type WHEN 'standard' THEN 0 ELSE 1 END,
-                julianday(b.use_by_date) ASC
-        """)
+            ORDER BY {_order}"""
+
+        fefo = query(_sql)
     except Exception as e:
         st.error(f"Database schema needs updating. Click below to fix.")
         if st.button("Reseed Database", key="reseed"):
@@ -194,24 +224,29 @@ with tab0:
         st.divider()
 
         # Filters
-        col1, col2 = st.columns(2)
-        with col1:
+        filter_cols = st.columns(3)
+        with filter_cols[0]:
             species_opts = ["All"] + sorted(fefo["species"].unique().tolist()) if "species" in fefo.columns else ["All"]
             species_filter = st.selectbox("Species", species_opts, key="fefo_species")
-        with col2:
+        with filter_cols[1]:
             loc_opts = ["All"] + sorted(fefo["Location"].unique().tolist()) if "Location" in fefo.columns else ["All"]
             loc_filter = st.selectbox("Location", loc_opts, key="fefo_loc")
+        with filter_cols[2]:
+            cert_opts = ["All"] + sorted(fefo["certification"].unique().tolist()) if "certification" in fefo.columns else ["All"]
+            cert_filter = st.selectbox("Certification", cert_opts, key="fefo_cert")
 
         display = fefo.copy()
         if species_filter != "All" and "species" in display.columns:
             display = display[display["species"] == species_filter]
         if loc_filter != "All" and "Location" in display.columns:
             display = display[display["Location"] == loc_filter]
+        if cert_filter != "All" and "certification" in display.columns:
+            display = display[display["certification"] == cert_filter]
 
-        # Pallet tag view — matches the physical tag on each pallet
+        # Show all available columns in order of importance
         show_cols = ["batch_code", "product", "Harvest/Intake/Defrost", "Use By",
-                     "Life (Days)", "Location", "Weight (kg)",
-                     "shelf_life_type", "urgency", "action"]
+                     "Life (Days)", "action", "Location", "Weight (kg)", "Units",
+                     "certification", "shelf_life_type", "run_number", "Alert", "urgency"]
 
         def colour_urgency(val):
             colors = {
