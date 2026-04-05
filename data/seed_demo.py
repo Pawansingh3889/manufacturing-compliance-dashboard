@@ -81,6 +81,11 @@ def seed():
                 concession = True
                 conc_reason = f"Extended +{extra}d: late dispatch"
 
+            # Pallet tag dates
+            harvest_date = (date - timedelta(days=random.randint(1, 5))).strftime("%Y-%m-%d")
+            defrost_dt = (date - timedelta(days=random.randint(0, 2))).strftime("%Y-%m-%d") if prod.product_type == "defrost" else None
+            intake_raw = (date - timedelta(days=random.randint(0, 1))).strftime("%Y-%m-%d")
+
             # SI-style fields
             run_counter += 1
             run_number = str(run_counter)
@@ -121,6 +126,9 @@ def seed():
                 age_days=age_days, life_days=life_days,
                 raw_material_batch=f"{prefix}{jd}{sub_batches[random.randint(0, 4)]}",
                 trace_id=trace_id,
+                harvest_date=harvest_date,
+                defrost_date=defrost_dt,
+                intake_date_raw=intake_raw,
                 supplier=random.choice(suppliers),
                 raw_input_kg=raw_kg, finished_output_kg=output_kg,
                 waste_kg=waste_kg, yield_pct=yield_pct,

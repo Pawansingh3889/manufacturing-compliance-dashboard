@@ -41,6 +41,9 @@ class Batch(Base):
     life_days = Column(Integer)  # Days of shelf life remaining (SI: Life)
     raw_material_batch = Column(String)
     trace_id = Column(String)  # SI Trace ID
+    harvest_date = Column(String)  # Date fish was harvested/caught
+    defrost_date = Column(String)  # Date product was defrosted (defrost only)
+    intake_date_raw = Column(String)  # Raw material intake date
     supplier = Column(String)
     raw_input_kg = Column(Float)
     finished_output_kg = Column(Float)

@@ -141,22 +141,29 @@ tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # === FEFO DESPATCH PRIORITY ===
 with tab0:
     st.markdown("### Despatch Priority (FEFO)")
-    st.caption("First Expired, First Out. Standard shelf life ships before superchilled when both in stock.")
+    st.caption("First Expired, First Out. Standard ships before superchilled. RED = concession needed if not shipped today.")
 
-    # Get all in-stock batches — mirrors SI Stock Tracker view
+    # Get all in-stock batches — pallet-level view
     fefo = query("""
-        SELECT b.batch_code, b.batch_no, b.run_number, b.trace_id,
+        SELECT b.batch_code, b.run_number,
                p.name as product, p.species, p.certification, p.shelf_life_type,
+               b.harvest_date as "Harvest", b.defrost_date as "Defrost",
+               b.pack_date as "Packed", b.use_by_date as "Use By",
                b.age_days as "Age (Days)", b.life_days as "Life (Days)",
-               b.stock_location as "Location", b.use_by_date as "Expiry",
-               b.production_date as "Post Date",
+               b.stock_location as "Location",
                b.stock_kg as "Weight (kg)", b.stock_units as "Units",
                b.alert_flag as "Alert",
                CASE
-                   WHEN b.life_days <= 3 THEN 'RED'
-                   WHEN b.life_days <= 7 THEN 'AMBER'
+                   WHEN b.life_days <= 0 THEN 'EXPIRED'
+                   WHEN b.life_days <= 2 THEN 'RED'
+                   WHEN b.life_days <= 5 THEN 'AMBER'
                    ELSE 'GREEN'
-               END as urgency
+               END as urgency,
+               CASE
+                   WHEN b.life_days <= 1 THEN 'CONCESSION REQUIRED'
+                   WHEN b.life_days <= 3 THEN 'SHIP TODAY'
+                   ELSE ''
+               END as action
         FROM batches b
         JOIN products p ON b.product_id = p.id
         WHERE b.status = 'In Stock' AND b.stock_kg > 0
@@ -167,22 +174,25 @@ with tab0:
 
     if not fefo.empty:
         # KPI cards
+        expired = len(fefo[fefo["urgency"] == "EXPIRED"])
         red = len(fefo[fefo["urgency"] == "RED"])
         amber = len(fefo[fefo["urgency"] == "AMBER"])
         green = len(fefo[fefo["urgency"] == "GREEN"])
+        concessions_needed = len(fefo[fefo["action"] == "CONCESSION REQUIRED"])
+        ship_today = len(fefo[fefo["action"] == "SHIP TODAY"])
         total_kg = round(fefo["Weight (kg)"].sum(), 0)
-        total_units = int(fefo["Units"].sum())
-        alerts = int(fefo["Alert"].sum()) if "Alert" in fefo.columns else 0
 
         col1, col2, col3, col4, col5, col6 = st.columns(6)
-        col1.metric("RED (<3 days)", red, delta="SHIP NOW" if red > 0 else "Clear",
-                    delta_color="inverse" if red > 0 else "normal")
-        col2.metric("AMBER (3-7d)", amber)
-        col3.metric("GREEN (7+d)", green)
-        col4.metric("Batches", len(fefo))
-        col5.metric("Stock (kg)", f"{total_kg:,.0f}")
-        col6.metric("Alerts", alerts, delta="CHECK" if alerts > 0 else "None",
-                    delta_color="inverse" if alerts > 0 else "normal")
+        col1.metric("CONCESSION", concessions_needed,
+                    delta="URGENT" if concessions_needed > 0 else "None",
+                    delta_color="inverse" if concessions_needed > 0 else "normal")
+        col2.metric("SHIP TODAY", ship_today,
+                    delta="ACTION" if ship_today > 0 else "Clear",
+                    delta_color="inverse" if ship_today > 0 else "normal")
+        col3.metric("RED (<3d)", red)
+        col4.metric("AMBER (3-5d)", amber)
+        col5.metric("GREEN (5+d)", green)
+        col6.metric("Stock (kg)", f"{total_kg:,.0f}")
 
         st.divider()
 
@@ -203,27 +213,34 @@ with tab0:
         if cert_filter != "All":
             display = display[display["certification"] == cert_filter]
 
-        # Show SI-style columns
-        show_cols = ["batch_code", "run_number", "product", "Age (Days)", "Life (Days)",
-                     "Location", "Expiry", "Weight (kg)", "Units", "certification",
-                     "shelf_life_type", "urgency", "Alert"]
+        # Pallet tag view — what despatch sees
+        show_cols = ["batch_code", "product", "Harvest", "Packed", "Use By",
+                     "Life (Days)", "Location", "Weight (kg)", "Units",
+                     "certification", "shelf_life_type", "urgency", "action"]
 
-        # Colour-coded table
         def colour_urgency(val):
-            if val == "RED":
-                return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
-            elif val == "AMBER":
-                return "background-color: #fef3c7; color: #92400e; font-weight: bold"
-            elif val == "GREEN":
-                return "background-color: #dcfce7; color: #166534"
-            return ""
+            colors = {
+                "EXPIRED": "background-color: #7f1d1d; color: white; font-weight: bold",
+                "RED": "background-color: #fee2e2; color: #991b1b; font-weight: bold",
+                "AMBER": "background-color: #fef3c7; color: #92400e; font-weight: bold",
+                "GREEN": "background-color: #dcfce7; color: #166534",
+            }
+            return colors.get(val, "")
 
         def colour_life(val):
             try:
                 v = int(val)
-                if v <= 3: return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
-                if v <= 7: return "background-color: #fef3c7; color: #92400e"
+                if v <= 0: return "background-color: #7f1d1d; color: white; font-weight: bold"
+                if v <= 2: return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
+                if v <= 5: return "background-color: #fef3c7; color: #92400e"
             except: pass
+            return ""
+
+        def colour_action(val):
+            if val == "CONCESSION REQUIRED":
+                return "background-color: #7f1d1d; color: white; font-weight: bold"
+            if val == "SHIP TODAY":
+                return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
             return ""
 
         def colour_shelf_type(val):
@@ -231,15 +248,11 @@ with tab0:
                 return "background-color: #dbeafe; font-weight: bold"
             return ""
 
-        def colour_alert(val):
-            if val: return "background-color: #fee2e2; font-weight: bold"
-            return ""
-
         visible = display[[c for c in show_cols if c in display.columns]]
         styled = visible.style.map(colour_urgency, subset=["urgency"]) \
                               .map(colour_life, subset=["Life (Days)"]) \
-                              .map(colour_shelf_type, subset=["shelf_life_type"]) \
-                              .map(colour_alert, subset=["Alert"])
+                              .map(colour_action, subset=["action"]) \
+                              .map(colour_shelf_type, subset=["shelf_life_type"])
         st.dataframe(styled, use_container_width=True, height=500)
 
         # RSPCA/MSC mismatch check
