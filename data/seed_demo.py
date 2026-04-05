@@ -17,8 +17,11 @@ def julian_day(dt):
 def seed():
     config = load_config()
 
-    # Reset database
-    drop_all()
+    # Reset database — delete file and recreate from scratch
+    from modules.database import DB_PATH
+    if DB_PATH and os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+
     init_db()
 
     engine = get_engine()
@@ -44,7 +47,7 @@ def seed():
         # === LIDL — Cod (MSC) ===
         Product(id=6, code="MSC-COD-260", name="Cod Loins 260g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
         Product(id=7, code="MSC-COD-250", name="Cod Fillets 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
-        Product(id=8, code="MSC-COD-250", name="Simply Cod 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
+        Product(id=8, code="MSC-SIM-250", name="Simply Cod 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
         # === LIDL — Haddock (MSC) ===
         Product(id=9, code="MSC-HAD-230", name="Haddock Fillets 230g", species="Haddock", category="White Fish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_HAD, customer="Lidl"),
         # === LIDL — Multi-pack Salmon (GG) ===
