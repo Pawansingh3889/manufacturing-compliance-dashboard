@@ -135,47 +135,49 @@ with tab0:
     st.caption("First Expired, First Out. Standard ships before superchilled. RED = concession needed if not shipped today.")
 
     # Get all in-stock batches — pallet-level view
-    fefo = query("""
-        SELECT b.batch_code, b.run_number,
-               p.name as product, p.species, p.certification, p.shelf_life_type,
-               CASE
-                   WHEN p.product_type = 'defrost' AND b.defrost_date IS NOT NULL THEN b.defrost_date
-                   WHEN b.harvest_date IS NOT NULL THEN b.harvest_date
-                   ELSE b.intake_date_raw
-               END as "Harvest/Intake/Defrost",
-               b.use_by_date as "Use By",
-               b.age_days as "Age (Days)", b.life_days as "Life (Days)",
-               b.stock_location as "Location",
-               b.stock_kg as "Weight (kg)", b.stock_units as "Units",
-               b.alert_flag as "Alert",
-               CASE
-                   WHEN b.life_days <= 0 THEN 'EXPIRED'
-                   WHEN b.life_days <= 2 THEN 'RED'
-                   WHEN b.life_days <= 5 THEN 'AMBER'
-                   ELSE 'GREEN'
-               END as urgency,
-               CASE
-                   WHEN b.life_days <= 1 THEN 'CONCESSION REQUIRED'
-                   WHEN b.life_days <= 3 THEN 'SHIP TODAY'
-                   ELSE ''
-               END as action
-        FROM batches b
-        JOIN products p ON b.product_id = p.id
-        WHERE b.status = 'In Stock' AND b.stock_kg > 0
-        ORDER BY
-            CASE p.shelf_life_type WHEN 'standard' THEN 0 ELSE 1 END,
-            b.life_days ASC
-    """)
+    try:
+        fefo = query("""
+            SELECT b.batch_code,
+                   p.name as product, p.species, p.shelf_life_type,
+                   b.intake_date as "Harvest/Intake/Defrost",
+                   b.use_by_date as "Use By",
+                   CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) as "Life (Days)",
+                   b.stock_location as "Location",
+                   b.stock_kg as "Weight (kg)",
+                   CASE
+                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 0 THEN 'EXPIRED'
+                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 2 THEN 'RED'
+                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 5 THEN 'AMBER'
+                       ELSE 'GREEN'
+                   END as urgency,
+                   CASE
+                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 1 THEN 'CONCESSION REQUIRED'
+                       WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 3 THEN 'SHIP TODAY'
+                       ELSE ''
+                   END as action
+            FROM batches b
+            JOIN products p ON b.product_id = p.id
+            WHERE b.status = 'In Stock' AND b.stock_kg > 0
+            ORDER BY
+                CASE p.shelf_life_type WHEN 'standard' THEN 0 ELSE 1 END,
+                julianday(b.use_by_date) ASC
+        """)
+    except Exception as e:
+        st.error(f"Database schema needs updating. Click below to fix.")
+        if st.button("Reseed Database", key="reseed"):
+            import subprocess
+            subprocess.run(["python3", "data/seed_demo.py"], cwd=os.path.dirname(os.path.abspath(__file__)))
+            st.rerun()
+        fefo = pd.DataFrame()
 
     if not fefo.empty:
         # KPI cards
-        expired = len(fefo[fefo["urgency"] == "EXPIRED"])
-        red = len(fefo[fefo["urgency"] == "RED"])
-        amber = len(fefo[fefo["urgency"] == "AMBER"])
-        green = len(fefo[fefo["urgency"] == "GREEN"])
-        concessions_needed = len(fefo[fefo["action"] == "CONCESSION REQUIRED"])
-        ship_today = len(fefo[fefo["action"] == "SHIP TODAY"])
-        total_kg = round(fefo["Weight (kg)"].sum(), 0)
+        concessions_needed = len(fefo[fefo["action"] == "CONCESSION REQUIRED"]) if "action" in fefo.columns else 0
+        ship_today = len(fefo[fefo["action"] == "SHIP TODAY"]) if "action" in fefo.columns else 0
+        red = len(fefo[fefo["urgency"] == "RED"]) if "urgency" in fefo.columns else 0
+        amber = len(fefo[fefo["urgency"] == "AMBER"]) if "urgency" in fefo.columns else 0
+        green = len(fefo[fefo["urgency"] == "GREEN"]) if "urgency" in fefo.columns else 0
+        total_kg = round(fefo["Weight (kg)"].sum(), 0) if "Weight (kg)" in fefo.columns else 0
 
         col1, col2, col3, col4, col5, col6 = st.columns(6)
         col1.metric("CONCESSION", concessions_needed,
@@ -192,26 +194,23 @@ with tab0:
         st.divider()
 
         # Filters
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         with col1:
-            species_filter = st.selectbox("Species", ["All"] + sorted(fefo["species"].unique().tolist()), key="fefo_species")
+            species_opts = ["All"] + sorted(fefo["species"].unique().tolist()) if "species" in fefo.columns else ["All"]
+            species_filter = st.selectbox("Species", species_opts, key="fefo_species")
         with col2:
-            loc_filter = st.selectbox("Location", ["All"] + sorted(fefo["Location"].unique().tolist()), key="fefo_loc")
-        with col3:
-            cert_filter = st.selectbox("Certification", ["All"] + sorted(fefo["certification"].unique().tolist()), key="fefo_cert")
+            loc_opts = ["All"] + sorted(fefo["Location"].unique().tolist()) if "Location" in fefo.columns else ["All"]
+            loc_filter = st.selectbox("Location", loc_opts, key="fefo_loc")
 
         display = fefo.copy()
-        if species_filter != "All":
+        if species_filter != "All" and "species" in display.columns:
             display = display[display["species"] == species_filter]
-        if loc_filter != "All":
+        if loc_filter != "All" and "Location" in display.columns:
             display = display[display["Location"] == loc_filter]
-        if cert_filter != "All":
-            display = display[display["certification"] == cert_filter]
 
         # Pallet tag view — matches the physical tag on each pallet
-        # Tag shows: harvest date (fresh), defrost date (defrost), or intake date
         show_cols = ["batch_code", "product", "Harvest/Intake/Defrost", "Use By",
-                     "Life (Days)", "Location", "Weight (kg)", "Units",
+                     "Life (Days)", "Location", "Weight (kg)",
                      "shelf_life_type", "urgency", "action"]
 
         def colour_urgency(val):
@@ -245,26 +244,30 @@ with tab0:
             return ""
 
         visible = display[[c for c in show_cols if c in display.columns]]
-        styled = visible.style.map(colour_urgency, subset=["urgency"]) \
-                              .map(colour_life, subset=["Life (Days)"]) \
-                              .map(colour_action, subset=["action"]) \
-                              .map(colour_shelf_type, subset=["shelf_life_type"])
+        style_map = visible.style
+        if "urgency" in visible.columns:
+            style_map = style_map.map(colour_urgency, subset=["urgency"])
+        if "Life (Days)" in visible.columns:
+            style_map = style_map.map(colour_life, subset=["Life (Days)"])
+        if "action" in visible.columns:
+            style_map = style_map.map(colour_action, subset=["action"])
+        if "shelf_life_type" in visible.columns:
+            style_map = style_map.map(colour_shelf_type, subset=["shelf_life_type"])
+        styled = style_map
         st.dataframe(styled, use_container_width=True, height=500)
 
-        # RSPCA/MSC mismatch check
-        st.divider()
-        st.markdown("**Certification Allocation Check**")
-        rspca_stock = fefo[fefo["certification"] == "RSPCA"]["Weight (kg)"].sum()
-        msc_stock = fefo[fefo["certification"] == "MSC"]["Weight (kg)"].sum()
-        std_stock = fefo[fefo["certification"] == "Standard"]["Weight (kg)"].sum()
+        # Certification check (if data available)
+        if "certification" in fefo.columns:
+            st.divider()
+            st.markdown("**Certification Allocation Check**")
+            rspca_stock = fefo[fefo["certification"] == "RSPCA"]["Weight (kg)"].sum() if "Weight (kg)" in fefo.columns else 0
+            msc_stock = fefo[fefo["certification"] == "MSC"]["Weight (kg)"].sum() if "Weight (kg)" in fefo.columns else 0
+            std_stock = fefo[fefo["certification"] == "Standard"]["Weight (kg)"].sum() if "Weight (kg)" in fefo.columns else 0
 
-        ccol1, ccol2, ccol3 = st.columns(3)
-        ccol1.metric("RSPCA Stock", f"{rspca_stock:,.0f} kg")
-        ccol2.metric("MSC Stock", f"{msc_stock:,.0f} kg")
-        ccol3.metric("Standard Stock", f"{std_stock:,.0f} kg")
-
-        if rspca_stock > 0 and std_stock > 0:
-            st.warning("RSPCA-certified stock in inventory alongside standard stock. Ensure RSPCA product is allocated to RSPCA orders to avoid margin loss.")
+            ccol1, ccol2, ccol3 = st.columns(3)
+            ccol1.metric("RSPCA Stock", f"{rspca_stock:,.0f} kg")
+            ccol2.metric("MSC Stock", f"{msc_stock:,.0f} kg")
+            ccol3.metric("Standard Stock", f"{std_stock:,.0f} kg")
     else:
         st.success("No stock currently in inventory.")
 
