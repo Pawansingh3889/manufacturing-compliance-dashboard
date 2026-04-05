@@ -44,6 +44,7 @@ class Product(Base):
     storage_zone = Column(String)
     certification = Column(String)  # RSPCA, MSC, Standard
     allergens = Column(String)
+    image_url = Column(String)  # Product image URL
     customer = Column(String, default="Retail")
 
 

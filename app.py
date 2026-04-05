@@ -418,7 +418,7 @@ with tab3:
     st.markdown("### Allergen Matrix")
     st.caption("Product x allergen cross-reference. BRC Section 5.")
 
-    products_df = query("SELECT name, species, category, allergens FROM products ORDER BY name")
+    products_df = query("SELECT name, species, category, allergens, image_url FROM products ORDER BY name")
     if not products_df.empty:
         all_allergens = set()
         for _, row in products_df.iterrows():
@@ -430,6 +430,8 @@ with tab3:
         matrix = []
         for _, row in products_df.iterrows():
             entry = {"Product": row["name"], "Category": row["category"]}
+            if "image_url" in row and row.get("image_url"):
+                entry["Image"] = row["image_url"]
             prod_allergens = [a.strip() for a in str(row["allergens"]).split(",")]
             for a in all_allergens:
                 entry[a] = "Y" if a in prod_allergens else ""
@@ -454,8 +456,12 @@ with tab3:
         def highlight(val):
             return "background-color: #fee2e2; color: #991b1b; font-weight: bold" if val == "Y" else ""
 
-        styled = display.style.map(highlight, subset=[c for c in display.columns if c not in ["Product", "Category"]])
-        st.dataframe(styled, use_container_width=True, height=400)
+        col_config = {}
+        if "Image" in display.columns:
+            col_config["Image"] = st.column_config.ImageColumn("Photo", width="small")
+
+        styled = display.style.map(highlight, subset=[c for c in display.columns if c not in ["Product", "Category", "Image"]])
+        st.dataframe(styled, use_container_width=True, height=400, column_config=col_config)
 
         csv = display.to_csv(index=False)
         st.download_button("Export CSV", csv, "allergen_matrix.csv", "text/csv")
