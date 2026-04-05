@@ -58,7 +58,9 @@ class Batch(Base):
     intake_date = Column(String)
     production_date = Column(String)  # Post Date in SI
     pack_date = Column(String)
-    use_by_date = Column(String)  # Post Expiry Date in SI
+    tag_use_by = Column(String)  # Use-by date printed on the pallet tag
+    plan_use_by = Column(String)  # Use-by date from Lidl's plan (what retail wants)
+    use_by_date = Column(String)  # Effective use-by (= tag_use_by)
     age_days = Column(Integer)  # Days since production (SI: Age)
     life_days = Column(Integer)  # Days of shelf life remaining (SI: Life)
     raw_material_batch = Column(String)

@@ -477,7 +477,7 @@ with tab3:
 # === SHELF LIFE ===
 with tab4:
     st.markdown("### Shelf Life & Concessions")
-    st.caption("Fresh = +19 days (Superchill). Defrost = +11 days (Chiller). Beyond = concession required.")
+    st.caption("Normal +9d | Rubber clock +10d (packed before 2pm) | Superchilled +11d | Superchill freeze-down +12d. Concession required if plan use-by > tag use-by.")
 
     sl_total = scalar("SELECT COUNT(*) FROM batches WHERE production_date >= date('now', '-30 days')") or 0
     sl_conc = scalar("SELECT COUNT(*) FROM batches WHERE production_date >= date('now', '-30 days') AND concession_required = 1") or 0
@@ -508,9 +508,12 @@ with tab4:
             st.dataframe(expiring, use_container_width=True)
 
     with col2:
-        st.markdown("**Concessions (30 days)**")
+        st.markdown("**Concessions — Plan vs Tag (30 days)**")
+        st.caption("Plan use-by is ahead of tag use-by = concession required")
         concessions = query("""
-            SELECT b.batch_code, b.concession_reason, b.pack_date, b.use_by_date, p.name
+            SELECT b.batch_code, p.name, p.shelf_life_type,
+                   b.tag_use_by as "Tag Use-By", b.plan_use_by as "Plan Use-By",
+                   b.concession_reason, b.pack_date
             FROM batches b JOIN products p ON b.product_id = p.id
             WHERE b.concession_required = 1 AND b.production_date >= date('now', '-30 days')
             ORDER BY b.production_date DESC
