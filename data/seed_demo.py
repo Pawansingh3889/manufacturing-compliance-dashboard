@@ -43,6 +43,7 @@ def seed():
 
     suppliers = ["Nordic Seafood AS", "Scottish Salmon Co", "Grimsby Fish Market", "Plymouth Trawlers", "Irish Shellfish Co"]
     operators = ["J. Smith", "A. Patel", "M. Kowalski", "S. Rahman", "K. Murphy", "T. Jones", "P. Kapkoti", "R. Singh"]
+    run_counter = 100000
     customers = ["Lidl", "Iceland", "Tesco", "M&S"]
     locations = list(config["temperature"]["locations"].keys())
     sub_batches = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -80,26 +81,46 @@ def seed():
                 concession = True
                 conc_reason = f"Extended +{extra}d: late dispatch"
 
+            # SI-style fields
+            run_counter += 1
+            run_number = str(run_counter)
+            age_days = day_offset  # Days since production
+            life_days = max(0, prod.shelf_life_days - day_offset)  # Remaining shelf life
+            trace_id = f"{batch_code}:{jd}"
+            batch_no_long = f"{date.strftime('%Y%m%d')}{prod.code}{batch_id:05d}"
+
             # Stock location and status based on age
-            days_old = day_offset
-            if days_old <= 2:
+            if day_offset <= 2:
                 stock_loc = random.choice(["Coldstore 1", "Coldstore 2", "Blast Freezer"])
                 stock_status = "In Stock"
+                process_status = "In Active"
                 stock_remaining = round(output_kg * random.uniform(0.3, 1.0), 1)
-            elif days_old <= 5:
+                stock_units = random.randint(5, 40)
+                alert = life_days <= 3
+            elif day_offset <= 5:
                 stock_loc = random.choice(["Coldstore 1", "Despatch Bay", "Coldstore 2"])
                 stock_status = random.choice(["In Stock", "In Stock", "Despatched"])
+                process_status = "In Active" if stock_status == "In Stock" else "Complete"
                 stock_remaining = round(output_kg * random.uniform(0, 0.5), 1) if stock_status == "In Stock" else 0
+                stock_units = random.randint(0, 20) if stock_status == "In Stock" else 0
+                alert = life_days <= 3 and stock_status == "In Stock"
             else:
                 stock_loc = "Despatched"
                 stock_status = "Despatched"
+                process_status = "Complete"
                 stock_remaining = 0
+                stock_units = 0
+                alert = False
 
             batch = Batch(
-                id=batch_id, batch_code=batch_code, product_id=prod.id,
+                id=batch_id, batch_code=batch_code,
+                batch_no=batch_no_long, run_number=run_number,
+                product_id=prod.id,
                 intake_date=date_str, production_date=date_str,
                 pack_date=date_str, use_by_date=use_by,
+                age_days=age_days, life_days=life_days,
                 raw_material_batch=f"{prefix}{jd}{sub_batches[random.randint(0, 4)]}",
+                trace_id=trace_id,
                 supplier=random.choice(suppliers),
                 raw_input_kg=raw_kg, finished_output_kg=output_kg,
                 waste_kg=waste_kg, yield_pct=yield_pct,
@@ -108,7 +129,10 @@ def seed():
                 operator=random.choice(operators),
                 stock_location=stock_loc,
                 stock_kg=stock_remaining,
+                stock_units=stock_units,
                 status=stock_status,
+                process_status=process_status,
+                alert_flag=alert,
                 concession_required=concession, concession_reason=conc_reason,
                 concession_approved_by=random.choice(["Quality Manager", "Site Manager"]) if concession else None,
                 concession_approved_date=date_str if concession else None,

@@ -131,15 +131,18 @@ with tab0:
     st.markdown("### Despatch Priority (FEFO)")
     st.caption("First Expired, First Out. Standard shelf life ships before superchilled when both in stock.")
 
-    # Get all in-stock batches with days to expiry
+    # Get all in-stock batches — mirrors SI Stock Tracker view
     fefo = query("""
-        SELECT b.batch_code, p.name as product, p.species, p.certification,
-               p.shelf_life_type, b.stock_location, b.use_by_date,
-               CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) as days_to_expiry,
-               b.stock_kg,
+        SELECT b.batch_code, b.batch_no, b.run_number, b.trace_id,
+               p.name as product, p.species, p.certification, p.shelf_life_type,
+               b.age_days as "Age (Days)", b.life_days as "Life (Days)",
+               b.stock_location as "Location", b.use_by_date as "Expiry",
+               b.production_date as "Post Date",
+               b.stock_kg as "Weight (kg)", b.stock_units as "Units",
+               b.alert_flag as "Alert",
                CASE
-                   WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 3 THEN 'RED'
-                   WHEN CAST(julianday(b.use_by_date) - julianday('now') AS INTEGER) <= 7 THEN 'AMBER'
+                   WHEN b.life_days <= 3 THEN 'RED'
+                   WHEN b.life_days <= 7 THEN 'AMBER'
                    ELSE 'GREEN'
                END as urgency
         FROM batches b
@@ -147,7 +150,7 @@ with tab0:
         WHERE b.status = 'In Stock' AND b.stock_kg > 0
         ORDER BY
             CASE p.shelf_life_type WHEN 'standard' THEN 0 ELSE 1 END,
-            julianday(b.use_by_date) ASC
+            b.life_days ASC
     """)
 
     if not fefo.empty:
@@ -155,15 +158,19 @@ with tab0:
         red = len(fefo[fefo["urgency"] == "RED"])
         amber = len(fefo[fefo["urgency"] == "AMBER"])
         green = len(fefo[fefo["urgency"] == "GREEN"])
-        total_kg = round(fefo["stock_kg"].sum(), 0)
+        total_kg = round(fefo["Weight (kg)"].sum(), 0)
+        total_units = int(fefo["Units"].sum())
+        alerts = int(fefo["Alert"].sum()) if "Alert" in fefo.columns else 0
 
-        col1, col2, col3, col4, col5 = st.columns(5)
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
         col1.metric("RED (<3 days)", red, delta="SHIP NOW" if red > 0 else "Clear",
                     delta_color="inverse" if red > 0 else "normal")
-        col2.metric("AMBER (3-7 days)", amber)
-        col3.metric("GREEN (7+ days)", green)
-        col4.metric("Total Batches", len(fefo))
+        col2.metric("AMBER (3-7d)", amber)
+        col3.metric("GREEN (7+d)", green)
+        col4.metric("Batches", len(fefo))
         col5.metric("Stock (kg)", f"{total_kg:,.0f}")
+        col6.metric("Alerts", alerts, delta="CHECK" if alerts > 0 else "None",
+                    delta_color="inverse" if alerts > 0 else "normal")
 
         st.divider()
 
@@ -172,7 +179,7 @@ with tab0:
         with col1:
             species_filter = st.selectbox("Species", ["All"] + sorted(fefo["species"].unique().tolist()), key="fefo_species")
         with col2:
-            loc_filter = st.selectbox("Location", ["All"] + sorted(fefo["stock_location"].unique().tolist()), key="fefo_loc")
+            loc_filter = st.selectbox("Location", ["All"] + sorted(fefo["Location"].unique().tolist()), key="fefo_loc")
         with col3:
             cert_filter = st.selectbox("Certification", ["All"] + sorted(fefo["certification"].unique().tolist()), key="fefo_cert")
 
@@ -180,9 +187,14 @@ with tab0:
         if species_filter != "All":
             display = display[display["species"] == species_filter]
         if loc_filter != "All":
-            display = display[display["stock_location"] == loc_filter]
+            display = display[display["Location"] == loc_filter]
         if cert_filter != "All":
             display = display[display["certification"] == cert_filter]
+
+        # Show SI-style columns
+        show_cols = ["batch_code", "run_number", "product", "Age (Days)", "Life (Days)",
+                     "Location", "Expiry", "Weight (kg)", "Units", "certification",
+                     "shelf_life_type", "urgency", "Alert"]
 
         # Colour-coded table
         def colour_urgency(val):
@@ -194,20 +206,36 @@ with tab0:
                 return "background-color: #dcfce7; color: #166534"
             return ""
 
+        def colour_life(val):
+            try:
+                v = int(val)
+                if v <= 3: return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
+                if v <= 7: return "background-color: #fef3c7; color: #92400e"
+            except: pass
+            return ""
+
         def colour_shelf_type(val):
             if val == "standard":
                 return "background-color: #dbeafe; font-weight: bold"
             return ""
 
-        styled = display.style.map(colour_urgency, subset=["urgency"]).map(colour_shelf_type, subset=["shelf_life_type"])
+        def colour_alert(val):
+            if val: return "background-color: #fee2e2; font-weight: bold"
+            return ""
+
+        visible = display[[c for c in show_cols if c in display.columns]]
+        styled = visible.style.map(colour_urgency, subset=["urgency"]) \
+                              .map(colour_life, subset=["Life (Days)"]) \
+                              .map(colour_shelf_type, subset=["shelf_life_type"]) \
+                              .map(colour_alert, subset=["Alert"])
         st.dataframe(styled, use_container_width=True, height=500)
 
         # RSPCA/MSC mismatch check
         st.divider()
         st.markdown("**Certification Allocation Check**")
-        rspca_stock = fefo[fefo["certification"] == "RSPCA"]["stock_kg"].sum()
-        msc_stock = fefo[fefo["certification"] == "MSC"]["stock_kg"].sum()
-        std_stock = fefo[fefo["certification"] == "Standard"]["stock_kg"].sum()
+        rspca_stock = fefo[fefo["certification"] == "RSPCA"]["Weight (kg)"].sum()
+        msc_stock = fefo[fefo["certification"] == "MSC"]["Weight (kg)"].sum()
+        std_stock = fefo[fefo["certification"] == "Standard"]["Weight (kg)"].sum()
 
         ccol1, ccol2, ccol3 = st.columns(3)
         ccol1.metric("RSPCA Stock", f"{rspca_stock:,.0f} kg")

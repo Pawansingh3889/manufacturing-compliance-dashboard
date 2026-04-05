@@ -29,24 +29,32 @@ class Product(Base):
 class Batch(Base):
     __tablename__ = "batches"
     id = Column(Integer, primary_key=True)
-    batch_code = Column(String, nullable=False)
+    batch_code = Column(String, nullable=False)  # Short trace code: F6036C
+    batch_no = Column(String)  # Long SI batch number
+    run_number = Column(String)  # SI Run Number
     product_id = Column(Integer, ForeignKey("products.id"))
     intake_date = Column(String)
-    production_date = Column(String)
+    production_date = Column(String)  # Post Date in SI
     pack_date = Column(String)
-    use_by_date = Column(String)
+    use_by_date = Column(String)  # Post Expiry Date in SI
+    age_days = Column(Integer)  # Days since production (SI: Age)
+    life_days = Column(Integer)  # Days of shelf life remaining (SI: Life)
     raw_material_batch = Column(String)
+    trace_id = Column(String)  # SI Trace ID
     supplier = Column(String)
     raw_input_kg = Column(Float)
     finished_output_kg = Column(Float)
     waste_kg = Column(Float)
     yield_pct = Column(Float)
-    line_number = Column(Integer)
+    line_number = Column(Integer)  # Production Line in SI
     shift = Column(String)
     operator = Column(String)
     stock_location = Column(String)  # Coldstore, Blast Freezer, Despatch Bay
-    stock_kg = Column(Float, default=0)  # Current stock level
-    status = Column(String, default="Complete")  # Complete, In Stock, Despatched
+    stock_kg = Column(Float, default=0)
+    stock_units = Column(Integer, default=0)
+    status = Column(String, default="Complete")  # In Active, Complete, Despatched
+    process_status = Column(String)  # SI: Process Status
+    alert_flag = Column(Boolean, default=False)  # SI: Stop/Alert
     concession_required = Column(Boolean, default=False)
     concession_reason = Column(String)
     concession_approved_by = Column(String)
