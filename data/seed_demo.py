@@ -37,6 +37,11 @@ def seed():
         Product(id=8, code="BCD-D", name="Breaded Cod Fillet", species="Cod", category="Processed", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish,Gluten,Eggs", image_url="https://images.unsplash.com/photo-1510130387422-82bed34b37e9?w=80&h=80&fit=crop", customer="Lidl"),
         Product(id=9, code="SEC-F", name="Salmon En Croute", species="Salmon", category="Ready Meal", product_type="defrost", shelf_life_type="superchilled", shelf_life_days=12, storage_zone="Chiller", certification="RSPCA", allergens="Fish,Gluten,Milk,Eggs", image_url="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=80&h=80&fit=crop", customer="Lidl"),
         Product(id=10, code="MAC-F", name="Mackerel Fillet (Fresh)", species="Mackerel", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Standard", allergens="Fish", image_url="https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=80&h=80&fit=crop", customer="Lidl"),
+        # Almaria range — Dubai/UAE contract, Halal certified
+        Product(id=11, code="ALM-SAL", name="Salmon 240g (Almaria)", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish", image_url="https://images.unsplash.com/photo-1574781330855-d0db8cc6a79c?w=80&h=80&fit=crop", customer="Almaria (Dubai)"),
+        Product(id=12, code="ALM-SWC", name="Salmon Sweet Chilli Marinade 220g (Almaria)", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish,Soya,Gluten", image_url="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=80&h=80&fit=crop", customer="Almaria (Dubai)"),
+        Product(id=13, code="ALM-BSB", name="Butterfly Sea Bass Lemon & Parsley 455g (Almaria)", species="Sea Bass", category="Prepared", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish", image_url="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=80&h=80&fit=crop", customer="Almaria (Dubai)"),
+        Product(id=14, code="ALM-SBS", name="Sea Bass 180g (Almaria)", species="Sea Bass", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish", image_url="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=80&h=80&fit=crop", customer="Almaria (Dubai)"),
     ]
     session.add_all(products)
     session.flush()
@@ -44,7 +49,7 @@ def seed():
     suppliers = ["Nordic Seafood AS", "Scottish Salmon Co", "Grimsby Fish Market", "Plymouth Trawlers", "Irish Shellfish Co"]
     operators = ["J. Smith", "A. Patel", "M. Kowalski", "S. Rahman", "K. Murphy", "T. Jones", "P. Kapkoti", "R. Singh"]
     run_counter = 100000
-    customers = ["Lidl", "Iceland", "Tesco", "M&S"]
+    customers = ["Lidl", "Iceland", "Tesco", "M&S", "Almaria (Dubai)"]
     locations = list(config["temperature"]["locations"].keys())
     sub_batches = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -154,7 +159,7 @@ def seed():
             prod = random.choice(products)
             order = Order(
                 id=order_id,
-                customer=random.choices(customers, weights=[70, 15, 10, 5])[0],
+                customer=random.choices(customers, weights=[60, 12, 10, 5, 13])[0],
                 product_id=prod.id,
                 production_batch=random.choice(day_batches) if day_batches else None,
                 quantity_kg=round(random.uniform(50, 400), 1),
