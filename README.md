@@ -15,6 +15,24 @@ Built by someone who works on the factory floor.
 
 ---
 
+
+## Batch Analytics (PySpark)
+
+The spark/ module provides batch-level analytics using PySpark, designed for processing large volumes of compliance data:
+
+| Output | What it computes |
+|---|---|
+| yield_analysis/ | Yield %, waste % by shift and production line |
+| temperature_report/ | Excursion rates, avg/min/max temp by location |
+| shelf_life_risk/ | Batches approaching or exceeding shelf life (EXPIRED/CRITICAL/WARNING) |
+| daily_production/ | Daily throughput, quality rate, alert counts per line |
+
+```bash
+pip install pyspark>=3.5
+python spark/batch_analytics.py
+```
+
+
 ## What It Does
 
 A ready-to-deploy Streamlit dashboard for food manufacturing compliance. Replaces Excel spreadsheets with a real-time compliance monitoring system.
