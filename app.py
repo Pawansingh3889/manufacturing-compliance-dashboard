@@ -9,11 +9,13 @@ import json
 from datetime import datetime
 
 # Always reseed demo database on startup — ensures latest schema
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "factory_compliance.db")
-if os.path.exists(DB_PATH):
-    os.remove(DB_PATH)
-from data.seed_demo import seed
-seed()
+# Skip if connected to SQL Server via COMPLIANCE_DB env var
+if not os.getenv("COMPLIANCE_DB"):
+    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "factory_compliance.db")
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+    from data.seed_demo import seed
+    seed()
 
 from modules.database import query, scalar, load_config
 

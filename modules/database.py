@@ -6,8 +6,17 @@ from sqlalchemy import create_engine, text, Column, Integer, String, Float, Bool
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 Base = declarative_base()
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "factory_compliance.db")
-DB_URL = f"sqlite:///{DB_PATH}"
+
+# Database URL — supports SQLite (demo) or SQL Server (production)
+# Set COMPLIANCE_DB env var to connect to SQL Server/SSRS:
+#   COMPLIANCE_DB=mssql+pyodbc://user:pass@server/database?driver=ODBC+Driver+17+for+SQL+Server
+_DB_ENV = os.getenv("COMPLIANCE_DB")
+if _DB_ENV:
+    DB_PATH = None
+    DB_URL = _DB_ENV
+else:
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "factory_compliance.db")
+    DB_URL = f"sqlite:///{DB_PATH}"
 
 
 class Product(Base):
