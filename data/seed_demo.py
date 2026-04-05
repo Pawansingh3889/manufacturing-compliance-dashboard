@@ -36,24 +36,24 @@ def seed():
     IMG_MAR = "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=80&h=80&fit=crop"
 
     products = [
-        # === LIDL — GG Salmon ===
-        Product(id=1, code="GG-SAL-240", name="GG Salmon Fillets 240g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
-        Product(id=2, code="GG-SAL-280", name="GG Salmon Fillets 280g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
-        # === LIDL — Simply Salmon (GG) ===
-        Product(id=3, code="GG-SIM-250", name="Simply Salmon 250g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
-        # === LIDL — Salmon Marinades (GG) ===
-        Product(id=4, code="GG-GH-220", name="Salmon Garlic & Herb Marinade 220g", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="GG", allergens="Fish,Milk", image_url=IMG_MAR, customer="Lidl"),
-        Product(id=5, code="GG-SC-220", name="Salmon Sweet Chilli Marinade 220g", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="GG", allergens="Fish,Soya", image_url=IMG_MAR, customer="Lidl"),
-        # === LIDL — Cod (MSC) ===
+        # === LIDL — GG Salmon (superchilled +11/+12) ===
+        Product(id=1, code="GG-SAL-240", name="GG Salmon Fillets 240g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        Product(id=2, code="GG-SAL-280", name="GG Salmon Fillets 280g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        # === LIDL — Simply Salmon (normal +9) ===
+        Product(id=3, code="GG-SIM-250", name="Simply Salmon 250g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        # === LIDL — Salmon Marinades (normal +9) ===
+        Product(id=4, code="GG-GH-220", name="Salmon Garlic & Herb Marinade 220g", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="GG", allergens="Fish,Milk", image_url=IMG_MAR, customer="Lidl"),
+        Product(id=5, code="GG-SC-220", name="Salmon Sweet Chilli Marinade 220g", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="GG", allergens="Fish,Soya", image_url=IMG_MAR, customer="Lidl"),
+        # === LIDL — Cod (MSC, defrost +9 normal) ===
         Product(id=6, code="MSC-COD-260", name="Cod Loins 260g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
-        Product(id=7, code="MSC-COD-250", name="Cod Fillets 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
-        Product(id=8, code="MSC-SIM-250", name="Simply Cod 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
-        # === LIDL — Haddock (MSC) ===
-        Product(id=9, code="MSC-HAD-230", name="Haddock Fillets 230g", species="Haddock", category="White Fish", product_type="defrost", shelf_life_type="standard", shelf_life_days=7, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_HAD, customer="Lidl"),
-        # === LIDL — Multi-pack Salmon (GG) ===
-        Product(id=10, code="GG-4SAL-480", name="4 Salmon Fillets 480g", species="Salmon", category="Multi-pack", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
-        Product(id=11, code="GG-SALJNT", name="Salmon Fillet Joint", species="Salmon", category="Joint", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
-        Product(id=12, code="GG-6SAL-660", name="6 Salmon Fillets 660g", species="Salmon", category="Multi-pack", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        Product(id=7, code="MSC-COD-250", name="Cod Fillets 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
+        Product(id=8, code="MSC-SIM-250", name="Simply Cod 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
+        # === LIDL — Haddock (MSC, normal +9) ===
+        Product(id=9, code="MSC-HAD-230", name="Haddock Fillets 230g", species="Haddock", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_HAD, customer="Lidl"),
+        # === LIDL — Multi-pack Salmon (GG, superchilled +11) ===
+        Product(id=10, code="GG-4SAL-480", name="4 Salmon Fillets 480g", species="Salmon", category="Multi-pack", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        Product(id=11, code="GG-SALJNT", name="Salmon Fillet Joint", species="Salmon", category="Joint", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        Product(id=12, code="GG-6SAL-660", name="6 Salmon Fillets 660g", species="Salmon", category="Multi-pack", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
         # === ALMARIA — Dubai/UAE, Halal certified ===
         Product(id=17, code="ALM-SAL-240", name="Salmon 240g (Almaria)", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish", image_url=IMG_SAL, customer="Almaria (Dubai)"),
         Product(id=18, code="ALM-SWC-220", name="Salmon Sweet Chilli Marinade 220g (Almaria)", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish,Soya,Gluten", image_url=IMG_MAR, customer="Almaria (Dubai)"),
@@ -94,14 +94,21 @@ def seed():
             output_kg = round(raw_kg - waste_kg, 1)
             yield_pct = round((output_kg / raw_kg) * 100, 1)
 
-            use_by = (date + timedelta(days=prod.shelf_life_days)).strftime("%Y-%m-%d")
+            # Tag use-by = pack date + shelf life days
+            tag_use_by_dt = date + timedelta(days=prod.shelf_life_days)
+            tag_use_by = tag_use_by_dt.strftime("%Y-%m-%d")
+
+            # Plan use-by = what Lidl's plan says (sometimes ahead of tag)
+            # Concession required if plan_use_by > tag_use_by
+            plan_offset = 0
             concession = False
             conc_reason = None
-            if prod.product_type == "defrost" and random.random() < 0.06:
-                extra = random.randint(1, 3)
-                use_by = (date + timedelta(days=prod.shelf_life_days + extra)).strftime("%Y-%m-%d")
+            if random.random() < 0.08:
+                plan_offset = random.randint(1, 3)
                 concession = True
-                conc_reason = f"Extended +{extra}d: late dispatch"
+                conc_reason = f"Plan use-by +{plan_offset}d ahead of tag use-by"
+            plan_use_by = (tag_use_by_dt + timedelta(days=plan_offset)).strftime("%Y-%m-%d")
+            use_by = tag_use_by  # Effective use-by is always the tag
 
             # Pallet tag dates
             harvest_date = (date - timedelta(days=random.randint(1, 5))).strftime("%Y-%m-%d")
@@ -150,7 +157,7 @@ def seed():
                 batch_no=batch_no_long, run_number=run_number,
                 product_id=prod.id,
                 intake_date=date_str, production_date=date_str,
-                pack_date=date_str, use_by_date=use_by,
+                pack_date=date_str, tag_use_by=tag_use_by, plan_use_by=plan_use_by, use_by_date=use_by,
                 age_days=age_days, life_days=life_days,
                 raw_material_batch=f"{prefix}{jd}{sub_batches[random.randint(0, 4)]}",
                 trace_id=trace_id,

@@ -20,15 +20,21 @@ batch_codes:
   date_format: "YDDD"  # Y = last digit of year, DDD = day of year
 
 # Shelf life rules
+# Shelf life rules — days counted from use-by date on label
+# Concession required if plan use-by > tag use-by
 shelf_life:
-  fresh:
-    days: 19
-    storage: "superchill"
-    concession_required: false
-  defrost:
+  normal:
+    days: 9
+    description: "Standard shelf life"
+  rubber_clock:
+    days: 10
+    description: "+10 only if packed before 2pm (clock starts after 2pm)"
+  superchilled:
     days: 11
-    storage: "chiller"
-    concession_required_after: 11  # Days beyond which concession is needed
+    description: "Superchilled storage"
+  superchilled_freeze_down:
+    days: 12
+    description: "Superchilled after freeze-down"
 
 # Temperature thresholds by zone
 temperature:
