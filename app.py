@@ -213,10 +213,10 @@ with tab0:
         if cert_filter != "All":
             display = display[display["certification"] == cert_filter]
 
-        # Pallet tag view — what despatch sees
-        show_cols = ["batch_code", "product", "Harvest", "Packed", "Use By",
+        # Pallet tag view — matches the physical tag on each pallet
+        show_cols = ["batch_code", "product", "Harvest", "Use By",
                      "Life (Days)", "Location", "Weight (kg)", "Units",
-                     "certification", "shelf_life_type", "urgency", "action"]
+                     "shelf_life_type", "urgency", "action"]
 
         def colour_urgency(val):
             colors = {
