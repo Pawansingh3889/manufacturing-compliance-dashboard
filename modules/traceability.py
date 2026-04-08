@@ -10,7 +10,13 @@ def trace_batch(batch_code):
     - Factory format: D6067K (Defrost), F6043A (Fresh)
     - Any case: f6093e works the same as F6093E
     """
+    if not batch_code or not isinstance(batch_code, str):
+        return {"batch_code": str(batch_code), "found": False, "error": "Invalid batch code"}
+
     batch_code = batch_code.strip().upper()
+    if len(batch_code) < 2:
+        return {"batch_code": batch_code, "found": False, "error": "Batch code too short"}
+
     result = {"batch_code": batch_code, "found": False}
 
     # Search production table first (most common lookup)

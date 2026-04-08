@@ -7,12 +7,23 @@ from modules.database import query, scalar
 
 def _get_config():
     config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.yaml")
-    with open(config_path, "r") as f:
-        return yaml.safe_load(f)
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+            if config is None:
+                raise ValueError("Empty config file")
+            return config
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+    except yaml.YAMLError as e:
+        raise ValueError(f"Invalid YAML in config: {e}")
 
 
 def _get_thresholds():
-    return _get_config()["temperature"]["locations"]
+    config = _get_config()
+    if "temperature" not in config or "locations" not in config["temperature"]:
+        raise KeyError("Missing temperature.locations in config.yaml")
+    return config["temperature"]["locations"]
 
 
 def get_latest_readings():

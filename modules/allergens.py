@@ -5,7 +5,12 @@ from modules.database import query
 
 def get_allergen_matrix():
     """Generate a product x allergen cross-reference matrix."""
-    products = query("SELECT id, name, species, category, allergens FROM products ORDER BY name")
+    try:
+        products = query("SELECT id, name, species, category, allergens FROM products ORDER BY name")
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to query products for allergen matrix: {e}")
+        return pd.DataFrame()
 
     if products.empty:
         return pd.DataFrame()
