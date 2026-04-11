@@ -4,6 +4,8 @@
 
 **BRC/HACCP food safety compliance — replaces your Excel spreadsheets**
 
+Supports BRC compliance for fish production including RSPCA/GG grading, waterfall yield tracking, and batch traceability from catch area to packed product.
+
 [![Live Dashboard](https://img.shields.io/badge/Live-Dashboard-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://manufacturing-compliance-dashboard-mjappkncanejzlfr5ngghik.streamlit.app)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)]()
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)]()
@@ -122,6 +124,26 @@ $ make setup && make run
 
 ---
 
+## Fish Production Compliance Features
+
+### Temperature Monitoring & Shelf Life
+Temperature monitoring with breach detection linked to shelf life extensions (+2/+3 superchill). Excursions are flagged in real time with duration tracking, and breaches automatically trigger shelf life concession reviews.
+
+### Allergen Matrix
+Allergen matrix supporting fish production allergens: fish, crustaceans, molluscs, wheat, egg, milk, and mustard. BRC Section 5 compliant with full cross-contact risk assessment and CSV export.
+
+### Batch Traceability
+Batch traceability supporting OCM scan-back lineage with parent-child batch mapping. Every batch is traceable from catch area through processing to packed product, with full chain scoring.
+
+### Weight Variance Reconciliation
+Weight variance reconciliation for BRC compliance across Lidl and Iceland product lines. Input/output yields are tracked per batch with waterfall reporting to identify loss points.
+
+### Golden Rule Enforcement
+
+> **The dashboard enforces the golden rule: RSPCA material can cascade down to GG products, but GG material can never be upgraded to RSPCA. Tail pieces are never packed into RSPCA products.**
+
+---
+
 ## Architecture
 
 ```
@@ -207,11 +229,12 @@ temperature:
 
 allergens:
   - Fish
-  - Milk
+  - Crustaceans
+  - Molluscs
+  - Wheat
   - Egg
-  - Soy
-  - Gluten
-  - Nuts
+  - Milk
+  - Mustard
 ```
 
 Upload your own data via the Excel/CSV upload tab — columns are validated automatically.
