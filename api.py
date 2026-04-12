@@ -3,11 +3,11 @@
 Run: uvicorn api:app --reload
 """
 
-from datetime import datetime
-from typing import Optional
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware

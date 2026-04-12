@@ -1,16 +1,15 @@
 """Manufacturing Compliance Dashboard - BRC/HACCP Compliance for Food Manufacturing."""
+import json
 import os
+from datetime import datetime
+
+import pandas as pd  # noqa: E402
+import plotly.express as px  # noqa: E402
+import streamlit as st  # noqa: E402
+
 from modules.monitoring import init_sentry
 
 init_sentry()
-
-import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import yaml
-import json
-from datetime import datetime
 
 # Seed demo database only if it doesn't exist
 if not os.getenv("COMPLIANCE_DB"):
@@ -20,7 +19,7 @@ if not os.getenv("COMPLIANCE_DB"):
         from data.seed_demo import seed
         seed()
 
-from modules.database import query, scalar, load_config, DB_PATH
+from modules.database import DB_PATH, load_config, query, scalar  # noqa: E402
 
 config = load_config()
 FACILITY = config["facility"]["name"]
@@ -120,7 +119,7 @@ with st.sidebar:
                                  help="Auto-maps columns from any food ERP")
 
     st.divider()
-    st.caption(f"[pawansingh3889.github.io](https://pawansingh3889.github.io)")
+    st.caption("[pawansingh3889.github.io](https://pawansingh3889.github.io)")
 
 # === MAIN ===
 tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -195,8 +194,8 @@ with tab0:
             ORDER BY {_order}"""
 
         fefo = query(_sql)
-    except Exception as e:
-        st.error(f"Database schema needs updating. Click below to fix.")
+    except Exception:
+        st.error("Database schema needs updating. Click below to fix.")
         if st.button("Reseed Database", key="reseed"):
             import subprocess
             subprocess.run(["python3", "data/seed_demo.py"], cwd=os.path.dirname(os.path.abspath(__file__)))
@@ -263,10 +262,14 @@ with tab0:
         def colour_life(val):
             try:
                 v = int(val)
-                if v <= 0: return "background-color: #7f1d1d; color: white; font-weight: bold"
-                if v <= 2: return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
-                if v <= 5: return "background-color: #fef3c7; color: #92400e"
-            except: pass
+                if v <= 0:
+                    return "background-color: #7f1d1d; color: white; font-weight: bold"
+                if v <= 2:
+                    return "background-color: #fee2e2; color: #991b1b; font-weight: bold"
+                if v <= 5:
+                    return "background-color: #fef3c7; color: #92400e"
+            except (ValueError, TypeError):
+                pass
             return ""
 
         def colour_action(val):

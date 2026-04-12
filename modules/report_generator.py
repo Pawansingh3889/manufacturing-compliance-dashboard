@@ -3,10 +3,10 @@
 Generates professional BRC/HACCP audit reports as in-memory byte streams.
 No files written to disk — compatible with read-only deployments.
 """
-import io
 from datetime import datetime
-from fpdf import FPDF
+
 import pandas as pd
+from fpdf import FPDF
 
 
 class AuditReportPDF(FPDF):

@@ -1,7 +1,9 @@
 """Temperature monitoring and excursion detection."""
 import os
+
 import pandas as pd
 import yaml
+
 from modules.database import query, scalar
 
 

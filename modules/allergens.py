@@ -1,5 +1,6 @@
 """Allergen matrix generation and management."""
 import pandas as pd
+
 from modules.database import query
 
 

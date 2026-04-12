@@ -1,9 +1,10 @@
 """Database engine with proper SQLAlchemy ORM tables."""
 import os
+
 import pandas as pd
 import yaml
-from sqlalchemy import create_engine, text, Column, Integer, String, Float, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, create_engine, text
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 

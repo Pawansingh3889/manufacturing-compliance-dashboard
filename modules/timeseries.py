@@ -4,8 +4,8 @@ Detects temperature excursions using rolling statistics
 and z-score based anomaly detection on sensor data.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def detect_anomalies(

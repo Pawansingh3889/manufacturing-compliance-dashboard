@@ -1,6 +1,6 @@
 """Excel/CSV file upload and parsing for data ingestion."""
+
 import pandas as pd
-import io
 
 
 def parse_upload(uploaded_file):

@@ -4,8 +4,8 @@ Fresh products: +19 days from pack date (superchill storage)
 Defrost products: +11 days from pack date (chiller storage)
 Beyond shelf life: concession required from Quality Manager
 """
-import pandas as pd
 from datetime import datetime, timedelta
+
 from modules.database import query, scalar
 
 

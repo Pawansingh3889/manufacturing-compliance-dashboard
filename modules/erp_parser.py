@@ -8,11 +8,11 @@ Supports:
 The parser auto-detects SSRS formatting (header rows, merged cells, footers)
 and strips it before mapping columns to the dashboard schema.
 """
-import pandas as pd
 import re
-from datetime import datetime, timedelta
-from modules.ssrs_parser import parse_ssrs_file, detect_ssrs_format
 
+import pandas as pd
+
+from modules.ssrs_parser import parse_ssrs_file
 
 # Standard column name mappings — maps common ERP export headers to our schema
 # Left side: what ERPs typically call it (case-insensitive, partial match)

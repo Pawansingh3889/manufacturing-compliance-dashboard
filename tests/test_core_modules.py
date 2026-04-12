@@ -5,8 +5,8 @@ Tests input validation and error handling — no database required.
 
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
 # Add parent dir to path for module imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -88,8 +88,9 @@ class TestTemperatureConfig:
 
 class TestAllergenEdgeCases:
     def test_products_with_allergen_no_match(self) -> None:
-        from modules.allergens import get_products_with_allergen
         import pandas as pd
+
+        from modules.allergens import get_products_with_allergen
 
         # Create a mock that returns empty
         try:

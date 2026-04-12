@@ -1,5 +1,6 @@
 """Batch traceability — trace any batch from raw material to customer."""
 import pandas as pd
+
 from modules.database import query, scalar
 
 

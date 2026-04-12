@@ -12,7 +12,6 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
-
 DB_PATH = Path(__file__).parent.parent / "data" / "factory_compliance.db"
 OUTPUT_DIR = Path(__file__).parent.parent / "data" / "spark_output"
 JDBC_URL = f"jdbc:sqlite:{DB_PATH.resolve()}"

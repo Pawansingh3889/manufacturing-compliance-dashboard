@@ -12,8 +12,10 @@
 
 # COMMAND ----------
 
-from pyspark.sql import functions as F
-from pyspark.sql import Window
+from pyspark.sql import functions as F  # noqa: F401
+
+# `spark` and `display` are provided by the Databricks runtime
+# ruff: noqa: F821
 
 # COMMAND ----------
 

@@ -1,11 +1,12 @@
 """Unit tests for compliance batch analytics."""
 
 from pyspark.sql import Row
+
 from spark.batch_analytics import (
-    compute_yield_analysis,
-    compute_temperature_report,
-    compute_shelf_life_risk,
     compute_daily_production,
+    compute_shelf_life_risk,
+    compute_temperature_report,
+    compute_yield_analysis,
 )
 
 

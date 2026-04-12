@@ -11,9 +11,9 @@ specific formatting that standard pandas.read_excel() doesn't handle well:
 
 This module strips SSRS formatting and extracts clean data.
 """
-import pandas as pd
 import re
-from datetime import datetime
+
+import pandas as pd
 
 
 def detect_ssrs_format(df):

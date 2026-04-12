@@ -1,13 +1,14 @@
 """Generate 60 days of realistic food factory data with intentional excursions."""
 import os
-import sys
 import random
+import sys
 from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from modules.database import get_engine, init_db, drop_all, Product, Batch, TemperatureLog, Order, Base, load_config
 from sqlalchemy.orm import sessionmaker
+
+from modules.database import Batch, Order, Product, TemperatureLog, get_engine, init_db, load_config
 
 
 def julian_day(dt):
