@@ -1,4 +1,4 @@
-.PHONY: setup test run clean
+.PHONY: setup test run clean lint format typecheck
 
 setup:
 	pip install -r requirements.txt
@@ -8,6 +8,15 @@ test:
 
 run:
 	streamlit run app.py
+
+lint:
+	ruff check .
+
+format:
+	ruff format .
+
+typecheck:
+	mypy modules/
 
 clean:
 	rm -rf __pycache__
