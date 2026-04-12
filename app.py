@@ -1,5 +1,9 @@
 """Manufacturing Compliance Dashboard - BRC/HACCP Compliance for Food Manufacturing."""
 import os
+from modules.monitoring import init_sentry
+
+init_sentry()
+
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go

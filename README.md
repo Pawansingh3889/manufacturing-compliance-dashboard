@@ -147,37 +147,24 @@ Weight variance reconciliation for BRC compliance across Lidl and Iceland produc
 ## Architecture
 
 ```
-                              ┌──────────────────────────┐
-                              │    Streamlit Dashboard    │
-                              │    (4 tabs, Plotly charts)│
-                              └────────────┬─────────────┘
-                                           │
-              ┌────────────────┬───────────┼───────────┬────────────────┐
-              ▼                ▼           ▼           ▼                ▼
-     ┌──────────────┐ ┌──────────────┐ ┌────────┐ ┌────────────┐ ┌────────┐
-     │ Traceability  │ │ Temperature   │ │Allergen│ │ Anomaly     │ │ Report │
-     │ Engine        │ │ Monitor       │ │ Matrix │ │ Detection   │ │ Gen    │
-     │               │ │               │ │        │ │ (z-score)   │ │(PDF)   │
-     │ batch chains  │ │ thresholds    │ │ BRC §5 │ │ excursion   │ │        │
-     │ FEFO check    │ │ 5 locations   │ │ export │ │ duration    │ │        │
-     │ scoring       │ │ trend charts  │ │        │ │ forecasting │ │        │
-     └──────┬───────┘ └──────┬───────┘ └───┬────┘ └─────┬──────┘ └───┬────┘
-            │                │             │             │            │
-            └────────────────┴─────────────┴─────────────┴────────────┘
-                                           │
-                              ┌────────────┴─────────────┐
-                              │  SQLite / PostgreSQL      │
-                              │  674 batches              │
-                              │  8,640 temp readings      │
-                              │  271 orders, 16 products  │
-                              └────────────┬─────────────┘
-                                           │
-                              ┌────────────┴─────────────┐
-                              │  PySpark / Databricks     │
-                              │  Batch analytics:         │
-                              │  yield, OEE, excursion    │
-                              │  rates, shelf life risk   │
-                              └──────────────────────────┘
+SI Integreater / PostgreSQL
+    |
+    v
+[SQLAlchemy] --- database connection with retry
+    |
+    +---> [Batch Traceability] --- catch area to packed product
+    |
+    +---> [Temperature Monitor] --- z-score anomaly detection
+    |
+    +---> [Allergen Matrix] --- 7 allergen types
+    |
+    +---> [Weight Variance] --- BRC compliance
+    |
+    v
+[Streamlit Dashboard] --- live at streamlit.app
+    |
+    v
+[Sentry] --- error monitoring (opt-in)
 ```
 
 ---
@@ -252,6 +239,17 @@ Upload your own data via the Excel/CSV upload tab — columns are validated auto
 | Anomaly Detection | scipy z-score, excursion duration, trend forecasting |
 | Reports | fpdf2 (PDF), JSON |
 | Deployment | Docker, Streamlit Cloud |
+
+---
+
+## Error Monitoring
+
+Optional error monitoring via [Sentry](https://sentry.io). Set the `SENTRY_DSN` environment variable to enable. If not set, monitoring is completely disabled (no-op).
+
+```bash
+export SENTRY_DSN="https://examplePublicKey@o0.ingest.sentry.io/0"
+export ENVIRONMENT="production"   # optional, defaults to "development"
+```
 
 ---
 
