@@ -3,3 +3,9 @@ __pycache__/
 .streamlit/secrets.toml
 data/factory_compliance.db
 data/compliance.db
+
+# AI tools
+.claude/
+.cursorrules
+.continue/
+.aider*
