@@ -12,6 +12,11 @@ Supports BRC compliance for fish production including RSPCA/GG grading, waterfal
 
 </div>
 
+## Links
+- [GitHub](https://github.com/Pawansingh3889/manufacturing-compliance-dashboard)
+- [Live Dashboard](https://manufacturing-compliance-dashboard-mjappkncanejzlfr5ngghik.streamlit.app)
+- [Profile](https://github.com/Pawansingh3889)
+
 ---
 
 Auditor asks for Batch 4821's traceability chain. Someone spends 20 minutes in Excel. This dashboard does it in 2 seconds.
