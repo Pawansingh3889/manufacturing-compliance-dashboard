@@ -38,36 +38,36 @@ def seed():
 
     products = [
         # === LIDL — GG Salmon (superchilled +11/+12) ===
-        Product(id=1, code="GG-SAL-240", name="GG Salmon Fillets 240g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
-        Product(id=2, code="GG-SAL-280", name="GG Salmon Fillets 280g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        Product(id=1, code="GG-SAL-240", name="GG Salmon Fillets 240g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Zone A", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Customer A"),
+        Product(id=2, code="GG-SAL-280", name="GG Salmon Fillets 280g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Zone A", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Customer A"),
         # === LIDL — Simply Salmon (normal +9) ===
-        Product(id=3, code="GG-SIM-250", name="Simply Salmon 250g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        Product(id=3, code="GG-SIM-250", name="Simply Salmon 250g", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Zone B", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Customer A"),
         # === LIDL — Salmon Marinades (normal +9) ===
-        Product(id=4, code="GG-GH-220", name="Salmon Garlic & Herb Marinade 220g", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="GG", allergens="Fish,Milk", image_url=IMG_MAR, customer="Lidl"),
-        Product(id=5, code="GG-SC-220", name="Salmon Sweet Chilli Marinade 220g", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="GG", allergens="Fish,Soya", image_url=IMG_MAR, customer="Lidl"),
+        Product(id=4, code="GG-GH-220", name="Salmon Garlic & Herb Marinade 220g", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Zone B", certification="GG", allergens="Fish,Milk", image_url=IMG_MAR, customer="Customer A"),
+        Product(id=5, code="GG-SC-220", name="Salmon Sweet Chilli Marinade 220g", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="normal", shelf_life_days=9, storage_zone="Zone B", certification="GG", allergens="Fish,Soya", image_url=IMG_MAR, customer="Customer A"),
         # === LIDL — Cod (MSC, defrost +9 normal) ===
-        Product(id=6, code="MSC-COD-260", name="Cod Loins 260g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
-        Product(id=7, code="MSC-COD-250", name="Cod Fillets 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
-        Product(id=8, code="MSC-SIM-250", name="Simply Cod 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Lidl"),
+        Product(id=6, code="MSC-COD-260", name="Cod Loins 260g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Zone B", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Customer A"),
+        Product(id=7, code="MSC-COD-250", name="Cod Fillets 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Zone B", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Customer A"),
+        Product(id=8, code="MSC-SIM-250", name="Simply Cod 250g", species="Cod", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Zone B", certification="MSC", allergens="Fish", image_url=IMG_COD, customer="Customer A"),
         # === LIDL — Haddock (MSC, normal +9) ===
-        Product(id=9, code="MSC-HAD-230", name="Haddock Fillets 230g", species="Haddock", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Chiller", certification="MSC", allergens="Fish", image_url=IMG_HAD, customer="Lidl"),
+        Product(id=9, code="MSC-HAD-230", name="Haddock Fillets 230g", species="Haddock", category="White Fish", product_type="defrost", shelf_life_type="normal", shelf_life_days=9, storage_zone="Zone B", certification="MSC", allergens="Fish", image_url=IMG_HAD, customer="Customer A"),
         # === LIDL — Multi-pack Salmon (GG, superchilled +11) ===
-        Product(id=10, code="GG-4SAL-480", name="4 Salmon Fillets 480g", species="Salmon", category="Multi-pack", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
-        Product(id=11, code="GG-SALJNT", name="Salmon Fillet Joint", species="Salmon", category="Joint", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
-        Product(id=12, code="GG-6SAL-660", name="6 Salmon Fillets 660g", species="Salmon", category="Multi-pack", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Superchill", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Lidl"),
+        Product(id=10, code="GG-4SAL-480", name="4 Salmon Fillets 480g", species="Salmon", category="Multi-pack", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Zone A", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Customer A"),
+        Product(id=11, code="GG-SALJNT", name="Salmon Fillet Joint", species="Salmon", category="Joint", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Zone A", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Customer A"),
+        Product(id=12, code="GG-6SAL-660", name="6 Salmon Fillets 660g", species="Salmon", category="Multi-pack", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=11, storage_zone="Zone A", certification="GG", allergens="Fish", image_url=IMG_SAL, customer="Customer A"),
         # === ALMARIA — Dubai/UAE, Halal certified ===
-        Product(id=17, code="ALM-SAL-240", name="Salmon 240g (Almaria)", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish", image_url=IMG_SAL, customer="Almaria (Dubai)"),
-        Product(id=18, code="ALM-SWC-220", name="Salmon Sweet Chilli Marinade 220g (Almaria)", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish,Soya,Gluten", image_url=IMG_MAR, customer="Almaria (Dubai)"),
-        Product(id=19, code="ALM-BSB-455", name="Butterfly Sea Bass Lemon & Parsley 455g (Almaria)", species="Sea Bass", category="Prepared", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish", image_url=IMG_SBS, customer="Almaria (Dubai)"),
-        Product(id=20, code="ALM-SBS-180", name="Sea Bass 180g (Almaria)", species="Sea Bass", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Superchill", certification="Halal", allergens="Fish", image_url=IMG_SBS, customer="Almaria (Dubai)"),
+        Product(id=17, code="ALM-SAL-240", name="Salmon 240g (Customer H)", species="Salmon", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Zone A", certification="Halal", allergens="Fish", image_url=IMG_SAL, customer="Customer H"),
+        Product(id=18, code="ALM-SWC-220", name="Salmon Sweet Chilli Marinade 220g (Customer H)", species="Salmon", category="Marinades", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Zone A", certification="Halal", allergens="Fish,Soya,Gluten", image_url=IMG_MAR, customer="Customer H"),
+        Product(id=19, code="ALM-BSB-455", name="Butterfly Sea Bass Lemon & Parsley 455g (Customer H)", species="Sea Bass", category="Prepared", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Zone A", certification="Halal", allergens="Fish", image_url=IMG_SBS, customer="Customer H"),
+        Product(id=20, code="ALM-SBS-180", name="Sea Bass 180g (Customer H)", species="Sea Bass", category="Fresh Fish", product_type="fresh", shelf_life_type="superchilled", shelf_life_days=19, storage_zone="Zone A", certification="Halal", allergens="Fish", image_url=IMG_SBS, customer="Customer H"),
     ]
     session.add_all(products)
     session.flush()
 
-    suppliers = ["Nordic Seafood AS", "Scottish Salmon Co", "Grimsby Fish Market", "Plymouth Trawlers", "Irish Shellfish Co"]
-    operators = ["J. Smith", "A. Patel", "M. Kowalski", "S. Rahman", "K. Murphy", "T. Jones", "P. Kapkoti", "R. Singh"]
+    suppliers = ["Supplier A", "Supplier B", "Supplier C", "Supplier D", "Supplier E"]
+    operators = ["J. Smith", "A. Patel", "M. Kowalski", "S. Rahman", "K. Murphy", "T. Jones", "P. Taylor", "R. Brown"]
     run_counter = 100000
-    customers = ["Lidl", "Iceland", "Tesco", "M&S", "Almaria (Dubai)"]
+    customers = ["Customer A", "Customer B", "Customer C", "Customer D", "Customer H"]
     locations = list(config["temperature"]["locations"].keys())
     sub_batches = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -120,7 +120,7 @@ def seed():
             # Effective use-by = earlier of tag and label (product must respect both)
             use_by = min(tag_use_by, label_use_by)
 
-            # 3. PLAN use-by = what Lidl's plan wants for retail delivery
+            # 3. PLAN use-by = what customer's plan wants for retail delivery
             #    Concession required if plan_use_by > tag_use_by
             plan_offset = 0
             concession = False
@@ -237,7 +237,7 @@ def seed():
                 tlog = TemperatureLog(
                     id=temp_id, location=loc, temperature=temp,
                     timestamp=ts.strftime("%Y-%m-%d %H:%M:%S"),
-                    recorded_by=random.choice(["Auto-Sensor", "Auto-Sensor", "J. Smith", "P. Kapkoti"]),
+                    recorded_by=random.choice(["Auto-Sensor", "Auto-Sensor", "J. Smith", "P. Taylor"]),
                     is_excursion=is_exc,
                 )
                 session.add(tlog)

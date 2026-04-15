@@ -328,7 +328,7 @@ with tab1:
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        batch_input = st.text_input("Batch code", placeholder="e.g. F6093E or D6067K")
+        batch_input = st.text_input("Batch code", placeholder="e.g. F6093E or X1234A")
         if st.button("Trace", type="primary", use_container_width=True):
             if batch_input:
                 batch_input = batch_input.strip().upper()
@@ -484,7 +484,7 @@ with tab3:
 # === SHELF LIFE ===
 with tab4:
     st.markdown("### Shelf Life & Concessions")
-    st.caption("Normal +9d | Rubber clock +10d (packed before 2pm) | Superchilled +11d | Superchill freeze-down +12d. Concession required if plan use-by > tag use-by.")
+    st.caption("Normal +9d | Rubber clock +10d (packed before 2pm) | Zone Aed +11d | Zone A freeze-down +12d. Concession required if plan use-by > tag use-by.")
 
     sl_total = scalar("SELECT COUNT(*) FROM batches WHERE production_date >= date('now', '-30 days')") or 0
     sl_conc = scalar("SELECT COUNT(*) FROM batches WHERE production_date >= date('now', '-30 days') AND concession_required = 1") or 0

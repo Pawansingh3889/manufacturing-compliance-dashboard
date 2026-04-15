@@ -36,7 +36,7 @@ def trace_batch(batch_code: str) -> str:
     production run details (yield, waste, dates), and customer orders.
 
     Args:
-        batch_code: Batch identifier (format: D6067K or F6043A).
+        batch_code: Batch identifier (format: X1234A or Y5678B).
     """
     try:
         result = traceability.trace_batch(batch_code)

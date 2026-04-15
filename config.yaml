@@ -5,14 +5,14 @@ facility:
   name: "Fish Processing Facility"
   site_code: "FPF-001"
   standard: "BRC Food Safety"
-  primary_customer: "Lidl"
+  primary_customer: "Customer A"
 
 # Batch code format
 # D = Defrost, F = Fresh
 # Numbers = Julian date (YDDD format: Y=last digit of year, DDD=day of year)
 # Letter suffix = sub-batch (A, B, C, D, E, F)
-# Example: D6067K = Defrost, 2026 day 067 (March 8), batch K
-# Example: F6043A = Fresh, 2026 day 043 (February 12), batch A
+# Example: X1234A = Defrost, 2026 day 067 (March 8), batch K
+# Example: Y5678B = Fresh, 2026 day 043 (February 12), batch A
 batch_codes:
   prefixes:
     D: "Defrost"
@@ -31,40 +31,40 @@ shelf_life:
     description: "+10 only if packed before 2pm (clock starts after 2pm)"
   superchilled:
     days: 11
-    description: "Superchilled storage"
+    description: "Zone Aed storage"
   superchilled_freeze_down:
     days: 12
-    description: "Superchilled after freeze-down"
+    description: "Zone Aed after freeze-down"
 
 # Temperature thresholds by zone
 temperature:
   locations:
-    Superchill:
+    Zone A:
       min: -1.0
       max: 1.0
       category: superchill
       description: "Fresh fish storage (-1 to +1C)"
-    Chiller 1:
+    Zone B:
       min: 0.0
       max: 5.0
       category: chilled
       description: "Defrost and general chilled storage"
-    Chiller 2:
+    Zone C:
       min: 0.0
       max: 5.0
       category: chilled
       description: "Secondary chilled storage"
-    Freezer 1:
+    Zone D:
       min: -22.0
       max: -18.0
       category: frozen
       description: "Frozen storage"
-    Production Floor:
+    Zone E:
       min: 8.0
       max: 15.0
       category: ambient
       description: "Processing area"
-    Dispatch Bay:
+    Zone F:
       min: 0.0
       max: 5.0
       category: chilled

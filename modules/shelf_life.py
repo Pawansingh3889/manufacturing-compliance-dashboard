@@ -80,7 +80,7 @@ def get_shelf_life_summary():
 def decode_batch_code(batch_code):
     """Decode a factory batch code into its components.
 
-    Format: D6067K or F6043A
+    Format: X1234A or Y5678B
     - D = Defrost, F = Fresh
     - 6 = year (2026)
     - 067 = day of year (Julian day)
@@ -116,7 +116,7 @@ def decode_batch_code(batch_code):
             "pack_date": pack_date.strftime("%Y-%m-%d"),
             "use_by_date": use_by.strftime("%Y-%m-%d"),
             "shelf_life_days": shelf_days,
-            "storage": "Superchill" if prefix == "F" else "Chiller",
+            "storage": "Zone A" if prefix == "F" else "Zone B",
         }
     except (ValueError, OverflowError):
         return None

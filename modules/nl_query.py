@@ -17,7 +17,7 @@ _DAYS = re.compile(r"(\d+)\s*days?", re.IGNORECASE)
 
 EXAMPLE_QUERIES = [
     "Show temperature excursions in the last 7 days",
-    "Trace batch D6067K",
+    "Trace batch X1234A",
     "Which batches expire in 3 days?",
     "Show allergen matrix",
     "What is the compliance score?",
@@ -55,7 +55,7 @@ def parse_query(text: str) -> dict[str, Any]:
     batch = _extract_batch(text)
     if batch or "trace" in lower:
         if not batch:
-            return {"intent": "trace_batch", "error": "No batch code found. Use format D6067K or F6043A."}
+            return {"intent": "trace_batch", "error": "No batch code found. Use format X1234A or Y5678B."}
         try:
             result = traceability.trace_batch(batch)
             return {"intent": "trace_batch", "params": {"batch_code": batch}, "result": result}
@@ -112,11 +112,11 @@ def get_query_context() -> str:
     return """You are a BRC/HACCP compliance assistant for a fish processing factory.
 
 Available data:
-- Temperature logs: readings from 6 zones (Superchill, Chiller 1/2, Freezer, Production Floor, Dispatch Bay)
+- Temperature logs: readings from 6 zones (Zone A, Zone B/2, Freezer, Zone E, Zone F)
 - Batch traceability: raw materials -> production -> customer orders
 - Allergen matrix: 14 EU allergens tracked per product
 - Shelf life: use-by dates, concessions, FEFO despatch priority
 - Compliance scoring: temperature compliance (target 95%), traceability (target 90%)
 
-Answer questions using specific data. Reference batch codes (format: D6067K or F6043A),
+Answer questions using specific data. Reference batch codes (format: X1234A or Y5678B),
 temperature zones, and allergen names. Use GBP for costs and kg for weights."""

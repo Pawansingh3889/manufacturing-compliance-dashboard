@@ -1,6 +1,6 @@
 """SSRS (SQL Server Reporting Services) Export Parser.
 
-SI Integreater uses SSRS for report generation. SSRS Excel exports have
+The ERP uses SSRS for report generation. SSRS Excel exports have
 specific formatting that standard pandas.read_excel() doesn't handle well:
 
 - Report header rows (title, parameters, date range)

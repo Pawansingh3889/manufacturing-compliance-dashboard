@@ -1,7 +1,7 @@
 """ERP Data Parser — imports data from any food manufacturing ERP system.
 
 Supports:
-- SI Integreater (Aptean) exports via SSRS (SQL Server Reporting Services)
+- ERP system exports via SSRS (SQL Server Reporting Services)
 - Generic BRC-compliant CSV/Excel exports
 - Custom column mapping via config
 
@@ -181,7 +181,7 @@ def auto_map_columns(df, data_type):
 def parse_erp_file(uploaded_file, data_type):
     """Parse an uploaded ERP export file and map to dashboard schema.
 
-    Auto-detects SSRS formatting (SI Integreater exports) and strips
+    Auto-detects SSRS formatting (ERP exports) and strips
     header rows, merged cells, and footer totals before mapping columns.
 
     Args:
@@ -193,14 +193,14 @@ def parse_erp_file(uploaded_file, data_type):
     """
     filename = uploaded_file.name.lower()
 
-    # Step 1: Try SSRS parser first (handles SI Integreater exports)
+    # Step 1: Try SSRS parser first (handles ERP exports)
     try:
         uploaded_file.seek(0)
         ssrs_df, ssrs_meta = parse_ssrs_file(uploaded_file)
         if ssrs_meta.get("is_ssrs") and not ssrs_df.empty:
             # SSRS format detected — use cleaned data
             mapped_df, report = auto_map_columns(ssrs_df, data_type)
-            report["format"] = "SSRS (SI Integreater)"
+            report["format"] = "SSRS (ERP)"
             report["ssrs_metadata"] = ssrs_meta
             report["rows"] = len(mapped_df)
             report["source"] = filename
@@ -274,16 +274,16 @@ def _post_process(mapped_df, report):
 def detect_batch_format(batch_code):
     """Detect the batch code format from a sample.
 
-    Returns the format type: 'si_factory' (D6067K), 'standard' (RM-YYMMDD-NNNN), or 'unknown'
+    Returns the format type: 'erp_factory' (X1234A), 'standard' (RM-YYMMDD-NNNN), or 'unknown'
     """
     if not batch_code or not isinstance(batch_code, str):
         return "unknown"
 
     batch = batch_code.strip().upper()
 
-    # SI Factory format: D6067K or F6043A
+    # SI Factory format: X1234A or Y5678B
     if re.match(r'^[DF]\d{4}[A-Z]$', batch):
-        return "si_factory"
+        return "erp_factory"
 
     # Standard format: RM-YYMMDD-NNNN or PR-YYMMDD-NNNN
     if re.match(r'^(RM|PR)-\d{6}-\d{4}$', batch):

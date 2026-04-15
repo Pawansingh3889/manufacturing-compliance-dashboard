@@ -45,7 +45,7 @@ class TestTraceabilityValidation:
         # Will fail on DB query but batch_code should be uppercased
         try:
             result = trace_batch("f6043a")
-            assert result["batch_code"] == "F6043A"
+            assert result["batch_code"] == "Y5678B"
         except Exception:
             pass  # DB not available in test, that's OK
 

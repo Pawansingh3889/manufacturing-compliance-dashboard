@@ -61,7 +61,7 @@ class Batch(Base):
     pack_date = Column(String)
     tag_use_by = Column(String)  # Raw material expiry: harvest/defrost + 19/11 days
     label_use_by = Column(String)  # Retail label: pack date + 9/10/11/12 days
-    plan_use_by = Column(String)  # What Lidl's plan wants
+    plan_use_by = Column(String)  # What customer's plan wants
     use_by_date = Column(String)  # Effective = min(tag, label)
     age_days = Column(Integer)  # Days since production (SI: Age)
     life_days = Column(Integer)  # Days of shelf life remaining (SI: Life)

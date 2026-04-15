@@ -114,7 +114,7 @@ $ make setup && make run
 │  │  3.1 2.8 2.3 2.5 2.1 2.4 2.3  (30-day trend)     │    │
 │  └────────────────────────────────────────────────────┘    │
 │                                                             │
-│  ┌─ Freezer 1 ────────────────────────────────────────┐    │
+│  ┌─ Zone D ────────────────────────────────────────┐    │
 │  │  Current: -19.4°C │ Min: -25.0°C │ Max: -15.0°C   │    │
 │  │  Status: ✅ IN RANGE                                │    │
 │  └────────────────────────────────────────────────────┘    │
@@ -162,7 +162,7 @@ Allergen matrix supporting fish production allergens: fish, crustaceans, mollusc
 Batch traceability supporting OCM scan-back lineage with parent-child batch mapping. Every batch is traceable from catch area through processing to packed product, with full chain scoring.
 
 ### Weight Variance Reconciliation
-Weight variance reconciliation for BRC compliance across Lidl and Iceland product lines. Input/output yields are tracked per batch with waterfall reporting to identify loss points.
+Weight variance reconciliation for BRC compliance across customer product lines. Input/output yields are tracked per batch with waterfall reporting to identify loss points.
 
 ### Golden Rule Enforcement
 
@@ -173,7 +173,7 @@ Weight variance reconciliation for BRC compliance across Lidl and Iceland produc
 ## Architecture
 
 ```
-SI Integreater / PostgreSQL
+ERP / PostgreSQL
     |
     v
 [SQLAlchemy] --- database connection with retry
@@ -230,7 +230,7 @@ temperature:
     Cold Room 2:
       min: -2.0
       max: 5.0
-    Freezer 1:
+    Zone D:
       min: -25.0
       max: -15.0
     Chiller (Dispatch):

@@ -8,7 +8,7 @@ def trace_batch(batch_code):
     """Trace a batch through the full supply chain.
 
     Supports:
-    - Factory format: D6067K (Defrost), F6043A (Fresh)
+    - Factory format: X1234A (Defrost), Y5678B (Fresh)
     - Any case: f6093e works the same as F6093E
     """
     if not batch_code or not isinstance(batch_code, str):
