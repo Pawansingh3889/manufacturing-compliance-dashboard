@@ -19,6 +19,21 @@ Supports BRC compliance for fish production including RSPCA/GG grading, waterfal
 
 ---
 
+## What Problem Does This Solve?
+
+Compliance officers in food manufacturing spend hours in Excel tracking batch traceability, temperature logs, allergen records, and weight variance. Auditors need instant answers. This dashboard replaces those spreadsheets with a live, searchable system that traces any product from catch area to packed product in seconds.
+
+### Key Features
+
+- **Full batch traceability** — trace any product from ocean catch to packed shelf in 2 seconds
+- **Real-time temperature monitoring** — automatic alerts when cold room readings breach limits
+- **Allergen matrix** — covers all 14 EU allergens with changeover sequence tracking
+- **Weight variance analysis** — z-score anomaly detection flags suspicious batches
+- **One-click audit reports** — give auditors what they need without opening Excel
+- **RSPCA/GG golden rule enforcement** — automated compliance checks against grading standards
+
+---
+
 Auditor asks for Batch 4821's traceability chain. Someone spends 20 minutes in Excel. This dashboard does it in 2 seconds.
 
 **[Try the live dashboard &rarr;](https://manufacturing-compliance-dashboard-mjappkncanejzlfr5ngghik.streamlit.app)**
