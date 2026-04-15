@@ -32,6 +32,11 @@ Compliance officers in food manufacturing spend hours in Excel tracking batch tr
 - **Weight variance analysis** — z-score anomaly detection flags suspicious batches
 - **One-click audit reports** — give auditors what they need without opening Excel
 - **RSPCA/GG golden rule enforcement** — automated compliance checks against grading standards
+- **Natural language queries** — auditors ask questions in plain English, get structured results
+- **MCP server** — expose compliance data as tools for LLM agents (5 tools via FastMCP)
+- **Declarative validation** — temperature, batch, and allergen data validated before import
+- **SLO monitoring** — temperature compliance (95%), traceability completeness (90%)
+- **Centralized chart themes** — consistent light/dark palette across dashboard and PDF reports
 
 ---
 
