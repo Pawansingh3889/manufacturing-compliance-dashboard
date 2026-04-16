@@ -16,7 +16,7 @@ format:
 	ruff format .
 
 typecheck:
-	mypy modules/
+	ty check modules/
 
 clean:
 	rm -rf __pycache__
