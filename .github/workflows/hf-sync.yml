@@ -1,7 +1,13 @@
 name: Sync to Hugging Face Space
 
-# Mirrors main to https://huggingface.co/spaces/pawankapkoti/manufacturing-compliance
+# Syncs main to https://huggingface.co/spaces/pawankapkoti/manufacturing-compliance
 # on every push. Requires an HF_TOKEN repo secret with write permission on the Space.
+#
+# Strategy: clone the HF repo, rsync source files over the top (filtering
+# out .png screenshots and other binaries HF's pre-receive hook rejects),
+# commit and push. This keeps the HF repo's own history intact rather than
+# overwriting it, and lets us exclude binaries that aren't needed at
+# runtime on the Space.
 
 on:
   push:
@@ -12,25 +18,79 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repo (full history required for force push)
+      - name: Check out source repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          lfs: true
+          fetch-depth: 1
 
-      - name: Push to Hugging Face Space
+      - name: Guard on HF_TOKEN secret
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_USERNAME: pawankapkoti
-          HF_SPACE: manufacturing-compliance
         run: |
           if [ -z "$HF_TOKEN" ]; then
             echo "::error::HF_TOKEN secret is not configured on the repository."
             exit 1
           fi
-          git config --global user.email "pawankapkoti3889@gmail.com"
-          git config --global user.name  "Pawansingh3889"
-          git remote add hf "https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE"
-          # Force-push because the Space has its own history (HF README
-          # frontmatter is managed manually on the Space side).
-          git push --force hf HEAD:main
+
+      - name: Clone the Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: pawankapkoti
+          HF_SPACE: manufacturing-compliance
+        run: |
+          git clone "https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE" /tmp/hf-space
+
+      - name: Copy source files into the Space (excluding binaries)
+        run: |
+          # Remove previously-synced runtime files from the Space so deletions
+          # in the source repo propagate. Keep the HF .git and any HF-only
+          # files (the README's HF frontmatter now lives in the source repo,
+          # so mirroring README.md is safe).
+          cd /tmp/hf-space
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' \
+            ! -name '.gitattributes' \
+            -exec rm -rf {} +
+
+          # rsync the source, excluding everything that is not needed at
+          # runtime on the Space and anything HF would reject (images,
+          # SQLite databases, CI config, docker artefacts, virtualenvs).
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.devcontainer/' \
+            --exclude='.venv*/' \
+            --exclude='venv/' \
+            --exclude='__pycache__/' \
+            --exclude='**/__pycache__/' \
+            --exclude='*.pyc' \
+            --exclude='*.png' \
+            --exclude='*.jpg' \
+            --exclude='*.jpeg' \
+            --exclude='*.gif' \
+            --exclude='*.db' \
+            --exclude='*.sqlite' \
+            --exclude='*.sqlite3' \
+            --exclude='Dockerfile' \
+            --exclude='docker-compose.yml' \
+            --exclude='.dockerignore' \
+            --exclude='render.yaml' \
+            --exclude='tests/' \
+            --exclude='notebooks/' \
+            --exclude='spark/' \
+            --exclude='Makefile' \
+            --exclude='run_app.bat' \
+            "$GITHUB_WORKSPACE/" /tmp/hf-space/
+
+      - name: Commit and push to Hugging Face
+        run: |
+          cd /tmp/hf-space
+          git config user.email "pawankapkoti3889@gmail.com"
+          git config user.name  "Pawansingh3889"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to sync."
+            exit 0
+          fi
+          git commit -m "Sync from github main @ ${GITHUB_SHA:0:7}"
+          git push origin main
