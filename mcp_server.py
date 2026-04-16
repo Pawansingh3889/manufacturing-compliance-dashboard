@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 mcp = FastMCP(
     "Compliance Dashboard MCP",
-    description=(
+    instructions=(
         "BRC/HACCP food safety compliance tools for fish manufacturing. "
         "Provides batch traceability, temperature monitoring, allergen matrix, "
         "and compliance scoring."

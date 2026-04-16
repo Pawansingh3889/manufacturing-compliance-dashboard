@@ -12,5 +12,5 @@ uvicorn>=0.29.0
 pytest>=9.0.2
 ruff>=0.11
 ty>=0.0.1a5
-fastmcp>=2.0.0
+fastmcp>=3.0.0
 scikit-learn>=1.5.0
