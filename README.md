@@ -1,3 +1,16 @@
+---
+title: Manufacturing Compliance Dashboard
+emoji: 🏭
+colorFrom: green
+colorTo: yellow
+sdk: streamlit
+sdk_version: 1.45.1
+app_file: app.py
+pinned: false
+license: mit
+short_description: BRC/HACCP food safety compliance dashboard
+---
+
 <div align="center">
 
 # Manufacturing Compliance Dashboard

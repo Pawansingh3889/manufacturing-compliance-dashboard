@@ -1,0 +1,36 @@
+name: Sync to Hugging Face Space
+
+# Mirrors main to https://huggingface.co/spaces/pawankapkoti/manufacturing-compliance
+# on every push. Requires an HF_TOKEN repo secret with write permission on the Space.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo (full history required for force push)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: pawankapkoti
+          HF_SPACE: manufacturing-compliance
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::HF_TOKEN secret is not configured on the repository."
+            exit 1
+          fi
+          git config --global user.email "pawankapkoti3889@gmail.com"
+          git config --global user.name  "Pawansingh3889"
+          git remote add hf "https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE"
+          # Force-push because the Space has its own history (HF README
+          # frontmatter is managed manually on the Space side).
+          git push --force hf HEAD:main

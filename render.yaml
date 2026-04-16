@@ -1,0 +1,30 @@
+# Render blueprint for the compliance dashboard's FastAPI service.
+#
+# First-time setup:
+#   1. Sign in at render.com (GitHub auth).
+#   2. Dashboard -> New -> Blueprint -> select this repo.
+#   3. Render reads this file and provisions the service.
+#   4. Subsequent pushes to main auto-deploy.
+#
+# The Streamlit dashboard itself keeps running on Streamlit Cloud. This
+# blueprint only publishes the REST API so that /compliance/score,
+# /batches/{code}/trace, /allergens/matrix, /shelf-life/expiring and
+# /slo/status are reachable from anywhere.
+
+services:
+  - type: web
+    name: compliance-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: main
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: PYTHONUNBUFFERED
+        value: "1"
