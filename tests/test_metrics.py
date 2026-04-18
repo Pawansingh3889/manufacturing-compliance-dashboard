@@ -12,7 +12,6 @@ import pytest
 
 from modules.metrics import MetricsCollector, _percentile
 
-
 # ---------------------------------------------------------------------------
 # Percentile helper
 # ---------------------------------------------------------------------------

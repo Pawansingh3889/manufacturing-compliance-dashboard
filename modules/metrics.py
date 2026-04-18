@@ -33,7 +33,6 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Deque
 
-
 # Default rolling window — 10 minutes is long enough to smooth over
 # per-minute noise, short enough that a fresh deploy's metrics appear in
 # under an hour even under steady load.
