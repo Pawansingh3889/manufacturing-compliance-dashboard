@@ -4,14 +4,17 @@ Run: uvicorn api:app --reload
 """
 
 import sqlite3
+import time
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from modules.metrics import MetricsCollector
 
 DB_PATH = Path("data/factory_compliance.db")
 
@@ -22,6 +25,36 @@ app = FastAPI(
 )
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"])
+
+# Four Golden Signals (Stefan Dienst, PyCon DE 2026) — in-process collector.
+# Exposed on /metrics; populated by the HTTP middleware below.
+metrics_collector = MetricsCollector()
+
+
+@app.middleware("http")
+async def _record_request_metrics(request: Request, call_next):
+    """Record latency + status for every request so /metrics has data.
+
+    The try/finally guarantees a metric is recorded even when a downstream
+    handler raises — a silent 500 is the exact case the Dienst talk warned
+    about ("alarms must be reliable"), and unrecorded errors break that.
+    """
+    start = time.perf_counter()
+    status_code = 500  # assume failure until proven otherwise
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    finally:
+        duration_ms = (time.perf_counter() - start) * 1000.0
+        # ``request.url.path`` is the raw path (e.g. /batches/X1234A/trace).
+        # Templating it to the route pattern would be nicer but requires
+        # walking the app router — not worth the complexity at this scale.
+        metrics_collector.record(
+            route=request.url.path,
+            duration_ms=duration_ms,
+            status_code=status_code,
+        )
 
 @contextmanager
 def get_db():
@@ -199,3 +232,33 @@ def slo_status_endpoint():
         return slo.slo_status()
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/metrics")
+def metrics_endpoint():
+    """Four Golden Signals over a 10-minute rolling window.
+
+    Pattern: Stefan Dienst, PyCon DE 2026 — latency, traffic, errors,
+    saturation. Returned as JSON so a dashboard can plot it directly;
+    no Prometheus exposition format because the deployment target is a
+    single Streamlit-Cloud-style container.
+
+    Schema (abbreviated)::
+
+        {
+          "window_seconds": 600,
+          "observed_at": 1713456789,
+          "traffic": {"total_requests": int, "rps": float},
+          "errors":  {"count": int, "rate": float},
+          "latency_ms": {"p50": float, "p95": float, "p99": float},
+          "saturation": {"available": bool, ...},
+          "by_route": { "<path>": { "count": int, "error_rate": float,
+                                    "latency_ms": {"p50": ..., "p95": ...} } }
+        }
+
+    Actionable interpretation for an on-call shift lead:
+    - ``errors.rate`` > 0.01 sustained → something's broken, open a ticket.
+    - ``latency_ms.p95`` doubling week-on-week → regression, check recent deploys.
+    - A route appearing in ``by_route`` with high ``error_rate`` isolates the fault.
+    """
+    return metrics_collector.snapshot()

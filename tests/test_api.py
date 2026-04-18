@@ -16,7 +16,60 @@ TestClient = fastapi_testclient.TestClient
 def client():
     import api  # imports the FastAPI app
 
+    # Reset metrics between tests so one test's traffic doesn't pollute
+    # another's assertions when they check totals.
+    api.metrics_collector.reset()
     return TestClient(api.app)
+
+
+# ---------------------------------------------------------------------------
+# /metrics — Four Golden Signals endpoint (Stefan Dienst, PyCon DE 2026)
+# ---------------------------------------------------------------------------
+
+
+def test_metrics_endpoint_returns_expected_schema(client):
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    data = response.json()
+    for key in ("window_seconds", "observed_at", "traffic", "errors",
+                "latency_ms", "saturation", "by_route"):
+        assert key in data, f"missing top-level key: {key}"
+    for key in ("p50", "p95", "p99"):
+        assert key in data["latency_ms"]
+
+
+def test_metrics_endpoint_reflects_prior_requests(client):
+    # Drive some traffic, then check /metrics saw it.
+    client.get("/health")
+    client.get("/health")
+    client.get("/health")
+
+    data = client.get("/metrics").json()
+    # /metrics itself is excluded from the per-route breakdown, but /health
+    # should appear with count >= 3.
+    assert "/health" in data["by_route"]
+    assert data["by_route"]["/health"]["count"] >= 3
+
+
+def test_metrics_records_error_on_unknown_batch(monkeypatch, client):
+    """A 5xx response must register in the error counter — the signal an
+    on-call reader needs to decide "something is broken now"."""
+    # Force an unexpected exception to produce a 500 via the global handler.
+    from modules import traceability
+
+    def blow_up(code: str):
+        raise RuntimeError("simulated backend failure")
+
+    monkeypatch.setattr(traceability, "trace_batch", blow_up)
+    resp = client.get("/batches/NO_SUCH/trace")
+    assert resp.status_code == 500
+
+    data = client.get("/metrics").json()
+    assert data["errors"]["count"] >= 1
+    # The failing route should show up in the per-route breakdown with
+    # error_count > 0.
+    failing = {r: v for r, v in data["by_route"].items() if v["error_count"] > 0}
+    assert failing, "/metrics should isolate the failing route"
 
 
 def test_health_endpoint(client):
