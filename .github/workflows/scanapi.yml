@@ -1,0 +1,87 @@
+name: ScanAPI integration tests
+
+# Runs ScanAPI (https://github.com/scanapi/scanapi) against the live
+# FastAPI app. Complements the in-process TestClient tests in ci.yml by
+# exercising the real HTTP / middleware / serialisation path.
+#
+# Currently non-blocking (``continue-on-error: true`` on the runner
+# step) while we build confidence in the spec. Once the harness is
+# stable, flip it to a required check.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  scanapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Seed the synthetic demo database
+        # Dashboard is read-only against an ERP in production; in CI the
+        # FastAPI app reads from the synthetic SQLite seed instead.
+        run: |
+          if [ -f scripts/seed_demo_db.py ]; then
+            python scripts/seed_demo_db.py
+          fi
+
+      - name: Start FastAPI in the background
+        run: |
+          python -m uvicorn api:app --host 127.0.0.1 --port 8000 > /tmp/uvicorn.log 2>&1 &
+          echo $! > /tmp/uvicorn.pid
+          # Wait for /health. 20 s cap — a slower startup means something
+          # else is wrong and surfacing it fast is better than timing out
+          # three minutes into the test run.
+          for _ in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8000/health > /dev/null; then
+              echo "api up"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run ScanAPI
+        # Advisory while we build confidence in the spec. Flip to a
+        # required check once the whole suite has gone green on a few
+        # consecutive runs without flakes.
+        continue-on-error: true
+        env:
+          BASE_URL: http://127.0.0.1:8000
+        run: scanapi run scanapi/scanapi.yaml -o scanapi-report/scanapi-report.html
+
+      - name: Upload ScanAPI report as artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scanapi-report
+          path: scanapi-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Print uvicorn log on failure
+        if: failure()
+        run: |
+          echo "::group::uvicorn log"
+          cat /tmp/uvicorn.log || true
+          echo "::endgroup::"
+
+      - name: Stop FastAPI
+        if: always()
+        run: |
+          if [ -f /tmp/uvicorn.pid ]; then
+            kill "$(cat /tmp/uvicorn.pid)" 2>/dev/null || true
+          fi
