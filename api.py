@@ -6,7 +6,7 @@ Run: uvicorn api:app --reload
 import sqlite3
 import time
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -78,7 +78,11 @@ def health_check():
             db_ok = True
     except Exception:
         db_ok = False
-    return HealthCheck(status="healthy" if db_ok else "degraded", db_connected=db_ok, timestamp=datetime.utcnow().isoformat())
+    return HealthCheck(
+        status="healthy" if db_ok else "degraded",
+        db_connected=db_ok,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
 
 @app.get("/batches")
 def get_batches(status: Optional[str] = None, limit: int = Query(100, le=1000)):
