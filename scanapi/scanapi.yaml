@@ -1,0 +1,136 @@
+# ScanAPI integration tests — drives the running FastAPI app over HTTP.
+#
+# Run with: ``make scanapi`` (starts uvicorn, runs ScanAPI, tears down).
+# The base URL defaults to http://localhost:8000; override via the
+# BASE_URL environment variable so the same spec can run against a
+# staging deploy.
+#
+# Pattern reference: Camila Maia's "Designing and scaling a Python
+# library in the open" (PyCon DE 2026). ScanAPI is at
+# https://github.com/scanapi/scanapi, MIT-licensed.
+#
+# Tests favour shape checks over value checks — the demo DB is
+# synthetic and the values drift every time ``scripts/seed_demo_db.py``
+# runs, but the column sets and response types are contracts that
+# should not change without a CHANGELOG note.
+
+endpoints:
+  - name: compliance-api
+    path: ${BASE_URL}
+    headers:
+      accept: application/json
+    requests:
+      # ── Service health ─────────────────────────────────────────
+      - name: health
+        path: /health
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_json
+            assert: ${{ "application/json" in response.headers.get("content-type", "") }}
+          - name: reports_status_field
+            assert: ${{ "status" in response.json() }}
+          - name: reports_db_connected_field
+            assert: ${{ "db_connected" in response.json() }}
+
+      # ── Core resource listings ────────────────────────────────
+      - name: batches_list
+        path: /batches
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: temperature_logs
+        path: /temperature
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: temperature_excursions_only
+        path: /temperature
+        method: get
+        query:
+          excursions_only: "true"
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+
+      - name: shelf_life_risk
+        path: /shelf-life/risk
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: yield_summary
+        path: /yield/summary
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      # ── Extended / compliance surface ─────────────────────────
+      - name: compliance_score
+        path: /compliance/score
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: reports_overall_score
+            assert: ${{ "overall_score" in response.json() }}
+          - name: reports_pass_fail_status
+            assert: ${{ response.json().get("status") in ("PASS", "FAIL") }}
+
+      - name: allergens_matrix
+        path: /allergens/matrix
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+
+      - name: shelf_life_expiring
+        path: /shelf-life/expiring
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+
+      - name: slo_status
+        path: /slo/status
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+
+      # ── Observability (Four Golden Signals) ───────────────────
+      - name: metrics
+        path: /metrics
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: has_traffic_block
+            assert: ${{ "traffic" in response.json() }}
+          - name: has_errors_block
+            assert: ${{ "errors" in response.json() }}
+          - name: has_latency_percentiles
+            assert: ${{ all(p in response.json().get("latency_ms", {}) for p in ("p50", "p95", "p99")) }}
+
+      # ── Negative-path: trace of a batch that doesn't exist ────
+      - name: trace_missing_batch
+        path: /batches/NO_SUCH_BATCH/trace
+        method: get
+        tests:
+          - name: status_is_404
+            assert: ${{ response.status_code == 404 }}

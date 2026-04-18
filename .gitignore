@@ -3,3 +3,7 @@ __pycache__/
 .streamlit/secrets.toml
 data/factory_compliance.db
 data/compliance.db
+
+# ScanAPI — generated HTML report lives next to the spec in scanapi/
+scanapi-report/
+scanapi-report.html
