@@ -48,6 +48,15 @@ code is written. Proposal template:
 3. alternatives considered
 4. what anonymisation rule it affects, if any
 
+### Architecture Decision Records (ADRs)
+
+Proposals that change *how* the dashboard is built (new vector
+backend, new auth model, new SLO definition, migration off Streamlit
+Cloud) are labelled **`ADR`** on the issue so they stay easy to find.
+Pattern from Camila Maia's ScanAPI talk (PyCon DE 2026). Follow-up
+issues reference the ADR by number; the ADR issue stays open in an
+archived state as the record of the decision.
+
 ## Issue assignment (first-PR-wins)
 
 1. Comment "I'd like to work on this" — earns a 7-day soft claim.

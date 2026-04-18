@@ -30,7 +30,10 @@ Supports BRC compliance for fish production including RSPCA/GG grading, waterfal
 - [Live Dashboard](https://manufacturing-compliance-dashboard-mjappkncanejzlfr5ngghik.streamlit.app)
 - [Hugging Face Space](https://huggingface.co/spaces/pawankapkoti/manufacturing-compliance)
 - [Profile](https://github.com/Pawansingh3889)
-- **Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`GOVERNANCE.md`](GOVERNANCE.md) · [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) · [`SECURITY.md`](SECURITY.md) · [`NOTICE`](NOTICE)
+- **Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`GOVERNANCE.md`](GOVERNANCE.md) · [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) · [`SECURITY.md`](SECURITY.md) · [`NOTICE`](NOTICE) · [`CHANGELOG.md`](CHANGELOG.md)
+
+**If this dashboard is useful to you, a GitHub star helps discoverability
+for other food-safety teams with the same BRCGS audit problem.**
 
 ---
 
