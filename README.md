@@ -35,6 +35,21 @@ Supports BRC compliance for fish production including RSPCA/GG grading, waterfal
 **If this dashboard is useful to you, a GitHub star helps discoverability
 for other food-safety teams with the same BRCGS audit problem.**
 
+### Integration tests (ScanAPI)
+
+The FastAPI layer has two layers of test coverage:
+
+- **Unit / in-process** — `tests/test_api.py` uses FastAPI's `TestClient`
+  for fast in-process tests (no network, runs in the main test job).
+- **Integration / real HTTP** — `scanapi/scanapi.yaml` drives every
+  endpoint over HTTP via [ScanAPI](https://github.com/scanapi/scanapi)
+  (by Camila Maia and the ScanAPI org, MIT). Catches middleware / CORS
+  / serialisation bugs TestClient skips. Runs locally via `make scanapi`
+  and on CI via the `ScanAPI integration tests` workflow.
+
+Report lands in `scanapi-report/` (gitignored). Point at a staging
+deploy by overriding the base URL: `make scanapi BASE_URL=https://staging.example.com`.
+
 ---
 
 ## What Problem Does This Solve?

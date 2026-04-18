@@ -17,6 +17,11 @@ accumulate under `[Unreleased]` until that changes (see
   5xx error rate + count, best-effort saturation (psutil when
   installed). 10-minute rolling window in-process. 13 tests in
   `tests/test_metrics.py`.
+- **ScanAPI integration tests** — `scanapi/scanapi.yaml` drives
+  every FastAPI endpoint over real HTTP. Complements the in-process
+  TestClient tests. `make scanapi` locally; dedicated CI workflow
+  uploads the HTML report as an artefact on every run. Uses ScanAPI
+  by Camila Maia and the ScanAPI org (MIT).
 - **Scope-and-limitations README section** — explicit "what this does /
   what it does NOT do" lists so users don't form ChatGPT-style
   expectations (Frank Rust & Thomas Prexl pattern, PyCon DE 2026).
