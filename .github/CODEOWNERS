@@ -1,0 +1,14 @@
+# CODEOWNERS for manufacturing-compliance-dashboard
+#
+# Every PR auto-requests review from the listed owner(s). Because this
+# dashboard is deployed to Streamlit Cloud and Hugging Face Spaces from
+# every push to main, review discipline on the compliance + API + MCP
+# surfaces matters — a bad merge reaches public hosting the same hour.
+
+* @Pawansingh3889
+
+# Anonymisation-sensitive paths — extra-emphasised (the wildcard already
+# covers them; these entries make the policy visible to a reader
+# browsing the file).
+/scripts/seed_demo_db.py @Pawansingh3889
+/tests/ @Pawansingh3889
