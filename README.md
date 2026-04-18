@@ -281,6 +281,49 @@ Upload your own data via the Excel/CSV upload tab — columns are validated auto
 
 ---
 
+## Scope and limitations
+
+Pattern borrowed from Frank Rust and Thomas Prexl's "It Works on My Machine"
+talk (PyCon DE 2026): tell users upfront what the app **can't** do so they
+don't form ChatGPT-style expectations. A dashboard that answers some
+questions perfectly and silently fails on others erodes trust faster than
+one that refuses out-of-scope questions cleanly.
+
+### What this dashboard does
+
+- Traces any batch code from catch area to packed shelf using the six ERP
+  tables listed in *Stack*
+- Flags temperature excursions, allergen-changeover gaps, weight-variance
+  outliers, and shelf-life risk based on pre-loaded rules
+- Exposes the same data over a FastAPI REST layer (`api.py`) and an MCP
+  server (`mcp_server.py`) for LLM agents
+- Answers a fixed set of natural-language questions via `modules/nl_query.py`
+  (regex-based, offline — no LLM call)
+- Reports Four Golden Signals on `GET /metrics` so operators can see when
+  the API itself is struggling
+
+### What it does NOT do
+
+- **No free-form SQL.** The NL query module only understands the patterns
+  coded into it; questions outside that set return "not supported" rather
+  than guessing.
+- **No writes to the ERP.** Every connection is read-only; the dashboard
+  surfaces data, it does not correct it.
+- **No live ERP integration in the public demo.** The hosted Streamlit /
+  Hugging Face versions run on anonymised synthetic data. Production
+  deployments point at a read-only user on the real ERP.
+- **No multi-tenant auth.** Password via Streamlit secrets, single-tenant.
+  If you need RBAC, put the app behind an identity-aware proxy.
+- **No PII.** The anonymised seed intentionally contains no real employee
+  names, customer identifiers, batch codes, or vessel registration numbers.
+  Production deployments must keep that rule — the app is designed for
+  factory-floor use, not as a customer-data store.
+- **No unbounded history.** Queries that would return more than a few
+  thousand rows are paginated or capped. Bulk export lives on the
+  production-analytics-pipeline side, not here.
+
+---
+
 ## Error Monitoring
 
 Optional error monitoring via [Sentry](https://sentry.io). Set the `SENTRY_DSN` environment variable to enable. If not set, monitoring is completely disabled (no-op).
