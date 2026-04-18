@@ -1,12 +1,17 @@
 # Development-only dependencies — not needed at runtime.
 # Install with: pip install -r requirements-dev.txt
-# (Already includes everything in requirements.txt so a single command
-# gets you a complete dev environment.)
+# (Already includes everything in requirements.txt.)
 -r requirements.txt
 
-# Integration tests hit the running FastAPI app over HTTP. ScanAPI
-# (https://github.com/scanapi/scanapi, MIT, maintained by Camila Maia
-# and the ScanAPI org) drives the calls from a YAML spec and writes an
-# HTML report to scanapi-report/. Complements the in-process FastAPI
-# TestClient tests that already live under tests/.
-scanapi>=2.12.0
+# NOTE: ScanAPI is NOT listed here. It pins MarkupSafe==2.1.2 and
+# rich==14.0.0 (strict == pins) which collide with Streamlit's looser
+# ranges when installed in the same venv. Install it via pipx instead,
+# which gives ScanAPI its own isolated environment — the CLI works the
+# same:
+#
+#   python -m pip install --user pipx
+#   python -m pipx ensurepath
+#   python -m pipx install 'scanapi>=2.12.0'
+#
+# Makefile target ``scanapi`` assumes ``scanapi`` is on PATH. That's
+# automatic after pipx runs ``ensurepath`` once.
