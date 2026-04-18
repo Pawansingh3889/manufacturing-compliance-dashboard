@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest a new feature or compliance capability
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Compliance problem it solves
+      description: Bonus points for a BRCGS clause reference (e.g. 3.9, 3.11, 8.5.1).
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Module(s) it affects, any new dependencies (default answer is no), UI surface.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: anonymisation
+    attributes:
+      label: Anonymisation invariant
+      description: See [`CONTRIBUTING.md`](../blob/main/CONTRIBUTING.md) § Anonymisation checklist.
+      options:
+        - label: This change does NOT require real PII, real customer names, real batch codes, or factory-specific thresholds.
+          required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

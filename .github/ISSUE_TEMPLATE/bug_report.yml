@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a bug or unexpected behaviour
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. If this is a **data-integrity or
+        security** issue (wrong MP, wrong council tax, service-
+        availability misrepresentation, attribution broken), please file
+        a [private advisory](../../security/advisories/new) instead —
+        see [`SECURITY.md`](../blob/main/SECURITY.md).
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface?
+      options:
+        - Streamlit UI
+        - FastAPI REST API
+        - MCP server tool
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start with ``make run``
+        2. Open http://localhost:8501
+        3. Select batch X1234A
+        4. Click Trace
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: e.g. 3.11.9
+
+  - type: input
+    id: deploy
+    attributes:
+      label: Deploy target
+      placeholder: local / Streamlit Cloud / Hugging Face Space / custom
+
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Redacted traceback (if applicable)
+      description: "**Never paste real operational data.** Anonymise before posting."
+      render: shell

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security / data-integrity report (wrong numbers, attribution broken, silent staleness)
+    url: https://github.com/Pawansingh3889/manufacturing-compliance-dashboard/security/advisories/new
+    about: Data-integrity and security issues go through the private advisory channel, not a public issue. See SECURITY.md.
+  - name: Discussion / question
+    url: https://github.com/Pawansingh3889/manufacturing-compliance-dashboard/discussions
+    about: Open-ended questions go in Discussions so issues stay actionable.
