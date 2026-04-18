@@ -21,7 +21,7 @@ Supports BRC compliance for fish production including RSPCA/GG grading, waterfal
 
 [![Live Dashboard](https://img.shields.io/badge/Live-Dashboard-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://manufacturing-compliance-dashboard-mjappkncanejzlfr5ngghik.streamlit.app)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)]()
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)]()
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square)](LICENSE)
 
 </div>
 
@@ -30,6 +30,7 @@ Supports BRC compliance for fish production including RSPCA/GG grading, waterfal
 - [Live Dashboard](https://manufacturing-compliance-dashboard-mjappkncanejzlfr5ngghik.streamlit.app)
 - [Hugging Face Space](https://huggingface.co/spaces/pawankapkoti/manufacturing-compliance)
 - [Profile](https://github.com/Pawansingh3889)
+- **Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`GOVERNANCE.md`](GOVERNANCE.md) · [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) · [`SECURITY.md`](SECURITY.md) · [`NOTICE`](NOTICE)
 
 ---
 
